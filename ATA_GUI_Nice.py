@@ -11,6 +11,7 @@ from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.time import Time
 from math import *
 import numpy as np
+import pyautogui
 customtkinter.CTkButton
 
 # Create the main root
@@ -32,14 +33,18 @@ scrollbar = Scrollbar(terminal_frame, command=terminal_output.yview)
 scrollbar.pack(side=RIGHT, fill=Y)
 terminal_output.config(yscrollcommand=scrollbar.set)
 
-def run_command(command):
+''''def run_command(command):
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     output, error = process.communicate()
     if output:
         terminal_output.insert(END, output.decode())
     if error:
         terminal_output.insert(END, error.decode())
-
+'''
+def run_command(command):
+  stream = os.popen(command)
+  out = stream.read()
+  pyautogui.alert(out)
 
 tabview = customtkinter.CTkTabview(master=root)
 tabview.grid(row=0,column=0)
