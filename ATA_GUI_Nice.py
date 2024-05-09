@@ -23,7 +23,7 @@ customtkinter.set_appearance_mode("Dark")
 
 #Configure frames
 
-
+#Control tabs
 
 tabview = customtkinter.CTkTabview(master=root, height=200, width=300)
 tabview.grid(row=0,column=0)
@@ -36,7 +36,7 @@ tabview.set("Calibrate")
 
 # Create a frame for the terminal output
 terminal_frame = Frame(master=root, height=200, width=300)
-terminal_frame.grid(row=2, column=0)
+terminal_frame.grid(row=1, column=0)
 # Create a text widget to display the terminal output
 terminal_output = Text(terminal_frame, wrap=WORD, height=20, width=100)
 terminal_output.pack(side=LEFT, fill=BOTH, expand=YES)
