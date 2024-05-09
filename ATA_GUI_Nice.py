@@ -70,7 +70,7 @@ server_button.grid(row=3, column=0, padx=5, pady=5)
 
 
 #antenna setup tabs
-from ATAtools import ata_control as ac
+from ATATools import ata_control as ac
 
 def show_ant_status_clicked():
   run_command("print(ac.get_ascii_status())")
