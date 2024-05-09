@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 import customtkinter
-#import webview
+import webview
 import os
 import subprocess
 import numpy as np
@@ -26,7 +26,7 @@ customtkinter.set_appearance_mode("Dark")
 #Control tabs
 
 tabview = customtkinter.CTkTabview(master=root, height=200, width=300)
-tabview.pack()
+tabview.pack(side=left)
 tabview.add("Calibrate")  
 tabview.add("Antenna Setup")
 tabview.add("Observe")  
@@ -36,7 +36,7 @@ tabview.set("Calibrate")
 
 # Create a frame for the terminal output
 terminal_frame = Frame(master=root, height=200, width=300)
-terminal_frame.pack()
+terminal_frame.pack(side=left)
 # Create a text widget to display the terminal output
 terminal_output = Text(terminal_frame, wrap=WORD, height=20, width=100)
 terminal_output.pack(side=LEFT, fill=BOTH, expand=YES)
@@ -44,6 +44,11 @@ terminal_output.pack(side=LEFT, fill=BOTH, expand=YES)
 scrollbar = Scrollbar(terminal_frame, command=terminal_output.yview)
 scrollbar.pack(side=RIGHT, fill=Y)
 terminal_output.config(yscrollcommand=scrollbar.set)
+
+
+#Create a frame for the ATA camera view
+camera_frame = Frame(master=root, height=200, width=300)
+camera_frame.pack(side=right)
 
 
 def run_command(command):
@@ -58,19 +63,19 @@ def test_usrp_clicked():
     run_command("/opt/ata-flowgraphs/usrp_test.py")
 
 test_usrp_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Test USRP", command=test_usrp_clicked)
-test_usrp_button.pack()
+test_usrp_button.pack(padx=5, pady=5)
 
 def reset_clocking_clicked():
     run_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
 
 reset_clocking_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Reset Clocking", command=reset_clocking_clicked)
-reset_clocking_button.pack()
+reset_clocking_button.pack(padx=5, pady=5)
 
 def server_clicked():
   run_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py &")
 
 server_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Connect to Server", command=server_clicked)
-server_button.pack()
+server_button.pack(padx=5, pady=5)
 
 
 
@@ -81,28 +86,28 @@ def show_ant_status_clicked():
   print(ac.get_ascii_status())
 
 show_ant_status_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Show Antenna Status", command=show_ant_status_clicked)
-show_ant_status_button.pack()
+show_ant_status_button.pack(padx=5, pady=5)
 
 def reserve_ant_clicked():
   antennas=['1a']
   ac.move_ant_group(antennas, 'none', 'atagr')
 
 reserve_ant_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Reserve Antenna", command=reserve_ant_clicked)
-reserve_ant_button.pack()
+reserve_ant_button.pack(padx=5, pady=5)
 
 freq_text = customtkinter.CTkTextbox(master=tabview.tab("Antenna Setup"), height=100, width=210,fg_color="transparent")
-freq_text.pack()
+freq_text.pack(padx=5, pady=5)
 freq_text.insert(tk.END, "Enter frequency below (MHz)\nUse 1420.405 for Hydrogen")
 
 freq_entry = customtkinter.CTkEntry(master=tabview.tab("Antenna Setup"), width=80)
-freq_entry.pack()
+freq_entry.pack(padx=5, pady=5)
 
 def set_freq_and_autotune_clicked():
   ac.set_freq({freq_entry}, antennas, 'd')
   ac.autotune(antennas)
 
 set_freq_and_autotune_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Set frequency and \nautotune antennas", command=set_freq_and_autotune_clicked)
-set_freq_and_autotune_button.pack()
+set_freq_and_autotune_button.pack(padx=5, pady=5)
 
 
 
@@ -147,23 +152,23 @@ def list_avail_targets_clicked():
 
 
 date_time_text = customtkinter.CTkTextbox(master=tabview.tab("Observe"), height=100, width=190,fg_color="transparent")
-date_time_text.pack()
+date_time_text.pack(padx=5, pady=5)
 date_time_text.insert(tk.END, "Enter the current date and time\nin format (YYYY-MM-DD HH:MM:SS)")
 
 
 date_time_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="Date Time")
-date_time_entry.pack()
+date_time_entry.pack(padx=5, pady=5)
 
 avail_targets_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Show Available Targets", command=list_avail_targets_clicked)
-avail_targets_button.pack()
+avail_targets_button.pack(padx=5, pady=5)
 
 def track_source_clicked():
   ac.track_source(antennas, radec=[Angle('').hour, Angle('').deg])
 
 ra_dec_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="RA Dec")
-ra_dec_entry.pack()
+ra_dec_entry.pack(padx=5, pady=5)
 
-#p://10.3.0.30/view/view.shtml?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1')
-#webview.start()
+webview.create_window(root=camera_frame,'ATA Live View', 'http://10.3.0.30/view/view.shtml?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1') 
+webview.start()
 
 root.mainloop()
