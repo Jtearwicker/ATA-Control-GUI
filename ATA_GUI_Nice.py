@@ -49,7 +49,8 @@ terminal_output.config(yscrollcommand=scrollbar.set)
 def run_command(command):
   stream = os.popen(command)
   out = stream.read()
-  pyautogui.alert(out) 
+  #pyautogui.alert(out)
+  terminal_frame.insert(tk.END, out) 
 
 
 #calibration tabs
@@ -89,7 +90,7 @@ def reserve_ant_clicked():
 reserve_ant_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Reserve Antenna", command=reserve_ant_clicked)
 reserve_ant_button.grid(row=5, column=0, padx=5, pady=5)
 
-freq_text = customtkinter.CTkTextbox(master=tabview.tab("Antenna Setup"), height=48, width=190,fg_color="transparent")
+freq_text = customtkinter.CTkTextbox(master=tabview.tab("Antenna Setup"), height=100, width=210,fg_color="transparent")
 freq_text.grid(row=6, column=0, padx=5, pady=5)
 freq_text.insert(tk.END, "Enter frequency below (MHz)\nUse 1420.405 for Hydrogen")
 
