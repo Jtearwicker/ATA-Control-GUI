@@ -26,7 +26,7 @@ customtkinter.set_appearance_mode("Dark")
 #Control tabs
 
 tabview = customtkinter.CTkTabview(master=root, height=200, width=300)
-tabview.grid(row=0,column=0)
+tabview.pack()
 tabview.add("Calibrate")  
 tabview.add("Antenna Setup")
 tabview.add("Observe")  
@@ -36,7 +36,7 @@ tabview.set("Calibrate")
 
 # Create a frame for the terminal output
 terminal_frame = Frame(master=root, height=200, width=300)
-terminal_frame.grid(row=1, column=0)
+terminal_frame.pack()
 # Create a text widget to display the terminal output
 terminal_output = Text(terminal_frame, wrap=WORD, height=20, width=100)
 terminal_output.pack(side=LEFT, fill=BOTH, expand=YES)
@@ -58,19 +58,19 @@ def test_usrp_clicked():
     run_command("/opt/ata-flowgraphs/usrp_test.py")
 
 test_usrp_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Test USRP", command=test_usrp_clicked)
-test_usrp_button.grid(row=1, column=0, padx=5, pady=5)
+test_usrp_button.pack()
 
 def reset_clocking_clicked():
     run_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
 
 reset_clocking_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Reset Clocking", command=reset_clocking_clicked)
-reset_clocking_button.grid(row=2, column=0, padx=5, pady=5)
+reset_clocking_button.pack()
 
 def server_clicked():
-  run_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
+  run_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py &")
 
 server_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Connect to Server", command=server_clicked)
-server_button.grid(row=3, column=0, padx=5, pady=5)
+server_button.pack()
 
 
 
@@ -81,28 +81,28 @@ def show_ant_status_clicked():
   print(ac.get_ascii_status())
 
 show_ant_status_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Show Antenna Status", command=show_ant_status_clicked)
-show_ant_status_button.grid(row=4, column=0, padx=5, pady=5)
+show_ant_status_button.pack()
 
 def reserve_ant_clicked():
   antennas=['1a']
   ac.move_ant_group(antennas, 'none', 'atagr')
 
 reserve_ant_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Reserve Antenna", command=reserve_ant_clicked)
-reserve_ant_button.grid(row=5, column=0, padx=5, pady=5)
+reserve_ant_button.pack()
 
 freq_text = customtkinter.CTkTextbox(master=tabview.tab("Antenna Setup"), height=100, width=210,fg_color="transparent")
-freq_text.grid(row=6, column=0, padx=5, pady=5)
+freq_text.pack()
 freq_text.insert(tk.END, "Enter frequency below (MHz)\nUse 1420.405 for Hydrogen")
 
 freq_entry = customtkinter.CTkEntry(master=tabview.tab("Antenna Setup"), width=80)
-freq_entry.grid(row=7, column=0, padx=5, pady=5)
+freq_entry.pack()
 
 def set_freq_and_autotune_clicked():
   ac.set_freq({freq_entry}, antennas, 'd')
   ac.autotune(antennas)
 
 set_freq_and_autotune_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Set frequency and \nautotune antennas", command=set_freq_and_autotune_clicked)
-set_freq_and_autotune_button.grid(row=8, column=0, padx=5, pady=5)
+set_freq_and_autotune_button.pack()
 
 
 
@@ -147,21 +147,21 @@ def list_avail_targets_clicked():
 
 
 date_time_text = customtkinter.CTkTextbox(master=tabview.tab("Observe"), height=100, width=190,fg_color="transparent")
-date_time_text.grid(row=10, column=0, padx=5, pady=5)
+date_time_text.pack()
 date_time_text.insert(tk.END, "Enter the current date and time\nin format (YYYY-MM-DD HH:MM:SS)")
 
 
 date_time_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="Date Time")
-date_time_entry.grid(row=11, column=0)
+date_time_entry.pack()
 
 avail_targets_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Show Available Targets", command=list_avail_targets_clicked)
-avail_targets_button.grid(row=12, column=0, padx=5, pady=5)
+avail_targets_button.pack()
 
 def track_source_clicked():
   ac.track_source(antennas, radec=[Angle('').hour, Angle('').deg])
 
 ra_dec_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="RA Dec")
-ra_dec_entry.grid(row=13, column=0)
+ra_dec_entry.pack()
 
 #p://10.3.0.30/view/view.shtml?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1')
 #webview.start()
