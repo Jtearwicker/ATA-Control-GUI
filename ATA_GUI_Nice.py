@@ -36,7 +36,7 @@ tabview.set("Calibrate")
 
 
 # Create a frame for the terminal output
-terminal_frame = Frame(master=root, height=200, width=300)
+terminal_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
 terminal_frame.pack(side=left)
 # Create a text widget to display the terminal output
 terminal_output = Text(terminal_frame, wrap=WORD, height=20, width=100)
@@ -48,7 +48,7 @@ terminal_output.config(yscrollcommand=scrollbar.set)
 
 
 #Create a frame for the ATA camera view
-camera_frame = Frame(master=root, height=200, width=300)
+camera_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
 camera_frame.load_website("http://10.3.0.30/view/view.shtml?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1") #load the website
 camera_frame.pack(fill="both", expand=True) #attach the HtmlFrame widget to the parent window
 
