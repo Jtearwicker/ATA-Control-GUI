@@ -37,13 +37,13 @@ tabview.set("Calibrate")
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
-terminal_frame.pack(side=left)
+terminal_frame.pack()
 # Create a text widget to display the terminal output
 terminal_output = Text(terminal_frame, wrap=WORD, height=20, width=100)
-terminal_output.pack(side=LEFT, fill=BOTH, expand=YES)
+terminal_output.pack(fill=BOTH, expand=YES)
 # Create a scrollbar for the text widget
 scrollbar = Scrollbar(terminal_frame, command=terminal_output.yview)
-scrollbar.pack(side=RIGHT, fill=Y)
+scrollbar.pack(fill=Y)
 terminal_output.config(yscrollcommand=scrollbar.set)
 
 
