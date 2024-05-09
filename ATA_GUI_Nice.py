@@ -14,8 +14,6 @@ import numpy as np
 import pyautogui
 customtkinter.CTkButton
 
-#testing
-
 # Create the main root
 root = customtkinter.CTk()
 root.title("ATA Control GUI")
@@ -35,14 +33,7 @@ scrollbar = Scrollbar(terminal_frame, command=terminal_output.yview)
 scrollbar.pack(side=RIGHT, fill=Y)
 terminal_output.config(yscrollcommand=scrollbar.set)
 
-''''def run_command(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    output, error = process.communicate()
-    if output:
-        terminal_output.insert(END, output.decode())
-    if error:
-        terminal_output.insert(END, error.decode())
-'''
+
 def run_command(command):
   stream = os.popen(command)
   out = stream.read()
@@ -55,7 +46,6 @@ tabview.add("Calibrate")
 tabview.add("Antenna Setup")
 tabview.add("Observe")  
 tabview.set("Calibrate")  
-
 
 
 #calibration tabs
@@ -80,17 +70,17 @@ server_button.grid(row=3, column=0, padx=5, pady=5)
 
 
 #antenna setup tabs
+from ATAtools import ata_control as ac
+
 def show_ant_status_clicked():
-  #run_command("/home/vgajjar/print(ac.get_ascii_status())")
   run_command("print(ac.get_ascii_status())")
-  #run_command("ls")
 
 show_ant_status_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Show Antenna Status", command=show_ant_status_clicked)
 show_ant_status_button.grid(row=4, column=0, padx=5, pady=5)
 
 def reserve_ant_clicked():
-  run_command("antennas=['1a']")
-  run_command("ac.move_ant_group(antennas, 'none', 'atagr')")
+  antennas=['1a']
+  ac.move_ant_group(antennas, 'none', 'atagr')
 
 reserve_ant_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Reserve Antenna", command=reserve_ant_clicked)
 reserve_ant_button.grid(row=5, column=0, padx=5, pady=5)
@@ -103,8 +93,8 @@ freq_entry = customtkinter.CTkEntry(master=tabview.tab("Antenna Setup"), width=8
 freq_entry.grid(row=7, column=0, padx=5, pady=5)
 
 def set_freq_and_autotune_clicked():
-  run_command("ac.set_freq({freq_entry}, antennas, 'd')")
-  run_command("ac.autotune(antennas)")
+  ac.set_freq({freq_entry}, antennas, 'd')
+  ac.autotune(antennas)
 
 set_freq_and_autotune_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Set frequency and \nautotune antennas", command=set_freq_and_autotune_clicked)
 set_freq_and_autotune_button.grid(row=8, column=0, padx=5, pady=5)
@@ -163,7 +153,7 @@ avail_targets_button = customtkinter.CTkButton(master=tabview.tab("Observe"), te
 avail_targets_button.grid(row=12, column=0, padx=5, pady=5)
 
 def track_source_clicked():
-  run_command("ac.track_source(antennas, radec=[Angle('').hour, Angle('').deg])")
+  ac.track_source(antennas, radec=[Angle('').hour, Angle('').deg])
 
 ra_dec_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="RA Dec")
 ra_dec_entry.grid(row=13, column=0)
