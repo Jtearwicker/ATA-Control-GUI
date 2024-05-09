@@ -12,6 +12,7 @@ from astropy.time import Time
 from math import *
 import numpy as np
 import pyautogui
+from tkinterweb import HtmlFrame
 customtkinter.CTkButton
 
 # Create the main root
