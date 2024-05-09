@@ -73,7 +73,7 @@ server_button.grid(row=3, column=0, padx=5, pady=5)
 from ATATools import ata_control as ac
 
 def show_ant_status_clicked():
-  run_command("print(ac.get_ascii_status())")
+  print(ac.get_ascii_status())
 
 show_ant_status_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Show Antenna Status", command=show_ant_status_clicked)
 show_ant_status_button.grid(row=4, column=0, padx=5, pady=5)
