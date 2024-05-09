@@ -58,13 +58,15 @@ tabview.set("Calibrate")
 
 #calibration tabs
 def test_usrp_clicked():
-    run_command("/opt/ata-flowgraphs/usrp_test.py")
+    #run_command("/opt/ata-flowgraphs/usrp_test.py")
+    run_command("python /home/vgajjar/reu-2023/Hydrogen_line/usrp_test.py")
 
 test_usrp_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Test USRP", command=test_usrp_clicked)
 test_usrp_button.grid(row=1, column=0, padx=5, pady=5)
 
 def reset_clocking_clicked():
-    run_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
+    #run_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
+    run_command("python /home/vgajjar/reu-2023/Hydrogen_line/usrp_reset_clocking.py")
 
 reset_clocking_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Reset Clocking", command=reset_clocking_clicked)
 reset_clocking_button.grid(row=2, column=0, padx=5, pady=5)
