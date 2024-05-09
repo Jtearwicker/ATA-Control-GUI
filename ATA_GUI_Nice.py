@@ -27,12 +27,12 @@ customtkinter.set_appearance_mode("Dark")
 control_frame = Frame(root, height=300, width=200)
 control_frame.grid(row=1, column=0)
 # Create a text widget to display the terminal output
-control_output = Text(control_frame, wrap=WORD, height=20, width=100)
-control_output.pack(side=LEFT, fill=BOTH, expand=YES)
+#control_output = Text(control_frame, wrap=WORD, height=20, width=100)
+#control_output.pack(side=LEFT, fill=BOTH, expand=YES)
 # Create a scrollbar for the text widget
-scrollbar = Scrollbar(control_frame, command=control_output.yview)
-scrollbar.pack(side=RIGHT, fill=Y)
-control_output.config(yscrollcommand=scrollbar.set)
+#scrollbar = Scrollbar(control_frame, command=control_output.yview)
+#scrollbar.pack(side=RIGHT, fill=Y)
+#control_output.config(yscrollcommand=scrollbar.set)
 
 tabview = customtkinter.CTkTabview(master=root)
 tabview.grid(row=0,column=0)
