@@ -23,18 +23,9 @@ customtkinter.set_appearance_mode("Dark")
 
 #Configure frames
 
-#Create a frame for the control tabs
-control_frame = Frame(root, height=300, width=200)
-control_frame.grid(row=1, column=0)
-# Create a text widget to display the terminal output
-#control_output = Text(control_frame, wrap=WORD, height=20, width=100)
-#control_output.pack(side=LEFT, fill=BOTH, expand=YES)
-# Create a scrollbar for the text widget
-#scrollbar = Scrollbar(control_frame, command=control_output.yview)
-#scrollbar.pack(side=RIGHT, fill=Y)
-#control_output.config(yscrollcommand=scrollbar.set)
 
-tabview = customtkinter.CTkTabview(master=root)
+
+tabview = customtkinter.CTkTabview(master=root, height=200, width=300)
 tabview.grid(row=0,column=0)
 tabview.add("Calibrate")  
 tabview.add("Antenna Setup")
@@ -44,7 +35,7 @@ tabview.set("Calibrate")
 
 
 # Create a frame for the terminal output
-terminal_frame = Frame(root, height=300, width=200)
+terminal_frame = Frame(master=root, height=200, width=300)
 terminal_frame.grid(row=2, column=0)
 # Create a text widget to display the terminal output
 terminal_output = Text(terminal_frame, wrap=WORD, height=20, width=100)
