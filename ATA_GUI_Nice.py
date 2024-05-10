@@ -61,9 +61,9 @@ def run_command(command):
   #pyautogui.alert(out)
   #terminal_output.add(tk.END, out) 
   terminal_text.insert(0.0, out)
-  text = terminal_text.get("0.0", "end")  # get text from line 0 character 0 till the end
-  terminal_text.delete("0.0", "end")  # delete all text
-  terminal_text.configure(state="disabled")  # configure textbox to be read-only
+  #text = terminal_text.get("0.0", "end")  # get text from line 0 character 0 till the end
+  #terminal_text.delete("0.0", "end")  # delete all text
+  #terminal_text.configure(state="disabled")  # configure textbox to be read-only
 
 
 #calibration tabs
