@@ -39,8 +39,10 @@ tabview.set("Calibrate")
 terminal_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
 terminal_frame.pack()
 # Create a text widget to display the terminal output
-terminal_output = Text(master=terminal_frame, wrap=WORD, height=20, width=100)
-terminal_output.pack(fill=BOTH, expand=YES)
+#terminal_output = Text(master=terminal_frame, wrap=WORD, height=20, width=100)
+#terminal_output.pack(fill=BOTH, expand=YES)
+terminal_text =  customtkinter.CTkTextbox(master=terminal_frame)
+
 # Create a scrollbar for the text widget
 scrollbar = Scrollbar(master=terminal_frame, command=terminal_output.yview)
 scrollbar.pack(fill=Y)
@@ -56,8 +58,12 @@ camera_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
 def run_command(command):
   stream = os.popen(command)
   out = stream.read()
-  pyautogui.alert(out)
-  terminal_output.add(tk.END, out) 
+  #pyautogui.alert(out)
+  #terminal_output.add(tk.END, out) 
+  terminal_text.insert(0.0, out)
+  text = terminal_text.get("0.0", "end")  # get text from line 0 character 0 till the end
+  terminal_text.delete("0.0", "end")  # delete all text
+  terminal_text.configure(state="disabled")  # configure textbox to be read-only
 
 
 #calibration tabs
