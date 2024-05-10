@@ -26,7 +26,7 @@ customtkinter.set_appearance_mode("Dark")
 
 #Control tabs
 
-tabview = customtkinter.CTkTabview(master=root, height=350, width=600)
+tabview = customtkinter.CTkTabview(master=root, height=350, width=1200)
 tabview.pack()
 tabview.add("Calibrate")  
 tabview.add("Antenna Setup")
@@ -79,8 +79,7 @@ server_button.pack(padx=5, pady=5)
 from ATATools import ata_control as ac
 
 def show_ant_status_clicked():
-  txt= print(ac.get_ascii_status())
-  terminal_text.insert(0.0, txt)
+  terminal_text.insert(0.0, ac.get_ascii_status())
 
 show_ant_status_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Show Antenna Status", command=show_ant_status_clicked)
 show_ant_status_button.pack(padx=5, pady=5)
