@@ -39,10 +39,10 @@ tabview.set("Calibrate")
 terminal_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
 terminal_frame.pack()
 # Create a text widget to display the terminal output
-terminal_output = Text(terminal_frame, wrap=WORD, height=20, width=100)
+terminal_output = Text(master=terminal_frame, wrap=WORD, height=20, width=100)
 terminal_output.pack(fill=BOTH, expand=YES)
 # Create a scrollbar for the text widget
-scrollbar = Scrollbar(terminal_frame, command=terminal_output.yview)
+scrollbar = Scrollbar(master=terminal_frame, command=terminal_output.yview)
 scrollbar.pack(fill=Y)
 terminal_output.config(yscrollcommand=scrollbar.set)
 
@@ -57,7 +57,7 @@ def run_command(command):
   stream = os.popen(command)
   out = stream.read()
   pyautogui.alert(out)
-  #terminal_frame.insert(tk.END, out) 
+  terminal_frame.insert(tk.END, out) 
 
 
 #calibration tabs
