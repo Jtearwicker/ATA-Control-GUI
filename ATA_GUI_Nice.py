@@ -26,7 +26,7 @@ customtkinter.set_appearance_mode("Dark")
 
 #Control tabs
 
-tabview = customtkinter.CTkTabview(master=root, height=400, width=600)
+tabview = customtkinter.CTkTabview(master=root, height=350, width=600)
 tabview.pack(side=LEFT)
 tabview.add("Calibrate")  
 tabview.add("Antenna Setup")
