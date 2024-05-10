@@ -42,7 +42,7 @@ terminal_frame.pack()
 #terminal_output = Text(master=terminal_frame, wrap=WORD, height=20, width=100)
 #terminal_output.pack(fill=BOTH, expand=YES)
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame)
-
+terminal_text.pack(fill=BOTH, expand=NO)
 # Create a scrollbar for the text widget
 #scrollbar = Scrollbar(master=terminal_frame, command=terminal_output.yview)
 #scrollbar.pack(fill=Y)
