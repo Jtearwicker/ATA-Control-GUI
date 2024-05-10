@@ -57,7 +57,7 @@ def run_command(command):
   stream = os.popen(command)
   out = stream.read()
   pyautogui.alert(out)
-  terminal_frame.output(tk.END, out) 
+  terminal_output.add(tk.END, out) 
 
 
 #calibration tabs
