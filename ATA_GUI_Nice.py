@@ -27,7 +27,7 @@ customtkinter.set_appearance_mode("Dark")
 #Control tabs
 
 tabview = customtkinter.CTkTabview(master=root, height=350, width=600)
-tabview.pack(side=LEFT)
+tabview.pack(side=LEFT, side=TOP)
 tabview.add("Calibrate")  
 tabview.add("Antenna Setup")
 tabview.add("Observe")  
@@ -35,6 +35,7 @@ tabview.set("Calibrate")
 
 progressbar = customtkinter.CTkProgressBar(master=tabview.tab("Calibrate"), orientation="horizontal")
 progressbar.configure(mode="indeterminate", indeterminate_speed=15)
+progressbar.start()
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
@@ -55,16 +56,9 @@ def run_command(command):
   out = stream.read()
   terminal_text.insert(0.0, out)
 
-def run_command1(command):
-  command
-  out = stream.read()
-  terminal_text.insert(0.0, out)
-
-
 
 #calibration tabs
 def test_usrp_clicked():
-    progressbar.start()
     run_command("/opt/ata-flowgraphs/usrp_test.py")
 
 
