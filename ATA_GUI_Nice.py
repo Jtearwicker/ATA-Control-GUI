@@ -27,7 +27,7 @@ customtkinter.set_appearance_mode("Dark")
 #Control tabs
 
 tabview = customtkinter.CTkTabview(master=root, height=400, width=600)
-tabview.pack()
+tabview.pack(side=LEFT)
 tabview.add("Calibrate")  
 tabview.add("Antenna Setup")
 tabview.add("Observe")  
@@ -40,7 +40,7 @@ terminal_frame = customtkinter.CTkFrame(master=root)
 terminal_frame.pack()
 # Create a text widget to display the terminal output
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=600)
-terminal_text.pack(fill=BOTH, expand=NO)
+terminal_text.pack(side=LEFT, fill=BOTH, expand=NO)
 
 #Create a frame for the ATA camera view
 camera_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
