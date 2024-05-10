@@ -36,10 +36,10 @@ tabview.set("Calibrate")
 
 
 # Create a frame for the terminal output
-terminal_frame = customtkinter.CTkFrame(master=root, height=400, width=600)
+terminal_frame = customtkinter.CTkFrame(master=root)
 terminal_frame.pack()
 # Create a text widget to display the terminal output
-terminal_text =  customtkinter.CTkTextbox(master=terminal_frame)
+terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=600)
 terminal_text.pack(fill=BOTH, expand=NO)
 
 #Create a frame for the ATA camera view
