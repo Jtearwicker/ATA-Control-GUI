@@ -80,7 +80,8 @@ server_button.pack(padx=5, pady=5)
 
 def disconnect_server_clicked():
     if server:
-        server.close()
+        print("Closing Server")
+        server.kill()
 
 disconnect_server_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Disconnect from Server", command=disconnect_server_clicked)
 disconnect_server_button.pack(padx=5, pady=5)
