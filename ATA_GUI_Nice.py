@@ -26,7 +26,7 @@ customtkinter.set_appearance_mode("Dark")
 
 #Control tabs
 
-tabview = customtkinter.CTkTabview(master=root, height=200, width=300)
+tabview = customtkinter.CTkTabview(master=root, height=400, width=600)
 tabview.pack()
 tabview.add("Calibrate")  
 tabview.add("Antenna Setup")
@@ -36,18 +36,11 @@ tabview.set("Calibrate")
 
 
 # Create a frame for the terminal output
-terminal_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
+terminal_frame = customtkinter.CTkFrame(master=root, height=400, width=600)
 terminal_frame.pack()
 # Create a text widget to display the terminal output
-#terminal_output = Text(master=terminal_frame, wrap=WORD, height=20, width=100)
-#terminal_output.pack(fill=BOTH, expand=YES)
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame)
 terminal_text.pack(fill=BOTH, expand=NO)
-# Create a scrollbar for the text widget
-#scrollbar = Scrollbar(master=terminal_frame, command=terminal_output.yview)
-#scrollbar.pack(fill=Y)
-#terminal_output.config(yscrollcommand=scrollbar.set)
-
 
 #Create a frame for the ATA camera view
 camera_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
@@ -58,12 +51,13 @@ camera_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
 def run_command(command):
   stream = os.popen(command)
   out = stream.read()
-  #pyautogui.alert(out)
-  #terminal_output.add(tk.END, out) 
   terminal_text.insert(0.0, out)
-  #text = terminal_text.get("0.0", "end")  # get text from line 0 character 0 till the end
-  #terminal_text.delete("0.0", "end")  # delete all text
-  #terminal_text.configure(state="disabled")  # configure textbox to be read-only
+
+def run_command1(command):
+  command
+  out = stream.read()
+  terminal_text.insert(0.0, out)
+
 
 
 #calibration tabs
@@ -94,7 +88,7 @@ server_button.pack(padx=5, pady=5)
 from ATATools import ata_control as ac
 
 def show_ant_status_clicked():
-  print(ac.get_ascii_status())
+  run_command1("print(ac.get_ascii_status())")
 
 show_ant_status_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Show Antenna Status", command=show_ant_status_clicked)
 show_ant_status_button.pack(padx=5, pady=5)
