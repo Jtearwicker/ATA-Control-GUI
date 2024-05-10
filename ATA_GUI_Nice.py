@@ -44,9 +44,9 @@ terminal_frame.pack()
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame)
 
 # Create a scrollbar for the text widget
-scrollbar = Scrollbar(master=terminal_frame, command=terminal_output.yview)
-scrollbar.pack(fill=Y)
-terminal_output.config(yscrollcommand=scrollbar.set)
+#scrollbar = Scrollbar(master=terminal_frame, command=terminal_output.yview)
+#scrollbar.pack(fill=Y)
+#terminal_output.config(yscrollcommand=scrollbar.set)
 
 
 #Create a frame for the ATA camera view
