@@ -15,6 +15,8 @@ import pyautogui
 from tkinterweb import HtmlFrame
 customtkinter.CTkButton
 
+server = None
+
 # Create the main root
 root = customtkinter.CTk()
 root.title("ATA Control GUI")
@@ -53,7 +55,7 @@ def run_command(command):
   terminal_text.insert(0.0, out)
 
 def run_server_command(command):
-  stream = os.popen(command)
+    return os.popen(command)
 
 
 #calibration tabs
@@ -71,11 +73,17 @@ reset_clocking_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"),
 reset_clocking_button.pack(padx=5, pady=5)
 
 def server_clicked():
-  run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py &")
+    server = run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py &")
 
 server_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Connect to Server", command=server_clicked)
 server_button.pack(padx=5, pady=5)
 
+def disconnect_server_clicked():
+    if server not None:
+        server.close()
+
+disconnect_server_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Disconnect from Server", command=disconnect_server_clicked)
+disconnect_server_button.pack(padx=5, pady=5)
 
 
 #antenna setup tabs
