@@ -62,7 +62,9 @@ def run_command(command):
 
 #calibration tabs
 def test_usrp_clicked():
+    progressbar = customtkinter.CTkProgressBar(master=tabview.tab("Calibrate"), orientation="horizontal", determinate_speed=15)
     run_command("/opt/ata-flowgraphs/usrp_test.py")
+
 
 test_usrp_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Test USRP", command=test_usrp_clicked)
 test_usrp_button.pack(padx=5, pady=5)
