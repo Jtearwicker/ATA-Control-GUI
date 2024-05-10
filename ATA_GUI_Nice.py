@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 import customtkinter
-import webview
+#import webview
 import os
 import subprocess
 import numpy as np
