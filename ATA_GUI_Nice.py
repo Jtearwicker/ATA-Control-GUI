@@ -33,13 +33,15 @@ tabview.add("Antenna Setup")
 tabview.add("Observe")  
 tabview.set("Calibrate") 
 
-
+progressbar = customtkinter.CTkProgressBar(master=tabview.tab("Calibrate"), orientation="horizontal")
+progressbar.configure(mode="indeterminate", indeterminate_speed=15)
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
 terminal_frame.pack()
 # Create a text widget to display the terminal output
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=600)
+terminal_text.configure(state="disabled")  # configure textbox to be read-only
 terminal_text.pack(side=LEFT, fill=BOTH, expand=NO)
 
 #Create a frame for the ATA camera view
@@ -62,7 +64,6 @@ def run_command1(command):
 
 #calibration tabs
 def test_usrp_clicked():
-    progressbar = customtkinter.CTkProgressBar(master=tabview.tab("Calibrate"), orientation="horizontal", determinate_speed=15)
     progressbar.start()
     run_command("/opt/ata-flowgraphs/usrp_test.py")
 
