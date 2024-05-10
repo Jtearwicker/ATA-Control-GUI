@@ -49,7 +49,7 @@ terminal_output.config(yscrollcommand=scrollbar.set)
 
 #Create a frame for the ATA camera view
 camera_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
-camera_frame.add(webview.create_window('ATA Live View', 'http://10.3.0.30/view/view.shtml?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1')) 
+webview.create_window('ATA Live View', 'http://10.3.0.30/view/view.shtml?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1')
 webview.start()
 
 
