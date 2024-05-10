@@ -56,7 +56,7 @@ camera_frame = customtkinter.CTkFrame(master=root, height=200, width=300)
 def run_command(command):
   stream = os.popen(command)
   out = stream.read()
-  #pyautogui.alert(out)
+  pyautogui.alert(out)
   #terminal_frame.insert(tk.END, out) 
 
 
