@@ -57,12 +57,13 @@ def run_command(command):
   stream = os.popen(command)
   out = stream.read()
   #pyautogui.alert(out)
-  terminal_frame.insert(tk.END, out) 
+  #terminal_frame.insert(tk.END, out) 
 
 
 #calibration tabs
 def test_usrp_clicked():
     progressbar = customtkinter.CTkProgressBar(master=tabview.tab("Calibrate"), orientation="horizontal", determinate_speed=15)
+    progressbar.start()
     run_command("/opt/ata-flowgraphs/usrp_test.py")
 
 
