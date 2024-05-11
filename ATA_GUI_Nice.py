@@ -78,7 +78,7 @@ server_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="C
 server_button.pack(padx=5, pady=5)
 
 def disconnect_server_clicked():
-    print("Disconncting from server")
+    terminal_text.insert(0.0, "Disconncting from server")
     run_server_command("pkill -f \"python /home/vgajjar/reu-2023/Hydrogen_line/server.py\"")
 
 disconnect_server_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Disconnect from Server", command=disconnect_server_clicked)
