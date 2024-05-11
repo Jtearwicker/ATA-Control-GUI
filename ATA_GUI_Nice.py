@@ -72,6 +72,7 @@ reset_clocking_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"),
 reset_clocking_button.pack(padx=5, pady=5)
 
 def server_clicked():
+    terminal_text.insert(0.0, "Conncting to server. Please wait 60 seconds before pressing any buttons.")
     run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
 
 server_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Connect to Server", command=server_clicked)
