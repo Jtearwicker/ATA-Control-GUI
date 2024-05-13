@@ -96,10 +96,17 @@ show_ant_status_button = customtkinter.CTkButton(master=tabview.tab("Antenna Set
 show_ant_status_button.pack(padx=5, pady=5)
 
 def reserve_ant_clicked():
-  antennas=['1a']
-  ac.move_ant_group(antennas, 'none', 'atagr')
+  antennas = ['1a']
+  #check if antenna 1a is already reserved
+  ant_free = ac.list_antenna_group('none')
+  if ant_free.find('1a') == -1:
+    terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved. It could be currently used for another project, or the previous user did not release the antenna after their observation.")
+  else:
+    ac.move_ant_group(antennas, 'none', 'atagr')
+    terminal_text.insert(0.0, "You have reserved Antenna 1a!")
 
-reserve_ant_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Reserve Antenna", command=reserve_ant_clicked)
+
+reserve_ant_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Reserve Antenna 1a", command=reserve_ant_clicked)
 reserve_ant_button.pack(padx=5, pady=5)
 
 freq_text = customtkinter.CTkTextbox(master=tabview.tab("Antenna Setup"), height=100, width=210,fg_color="transparent")
@@ -175,6 +182,12 @@ def track_source_clicked():
 ra_dec_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="RA Dec")
 ra_dec_entry.pack(padx=5, pady=5)
 
+def release_antenna_clicked():
+    ac.move_ant_group(antennas, 'atagr', 'none')
+    terminal_text.insert(0.0, "Antenna 1a has been released")
+
+release_ant_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Release Antenna 1a", command=release_ant_clicked)
+release_ant_button.pack(padx=5, pady=5)
 
 
 root.mainloop()
