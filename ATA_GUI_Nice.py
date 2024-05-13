@@ -100,7 +100,7 @@ def reserve_ant_clicked():
   #check if antenna 1a is already reserved
   ant_free = str(ac.list_antenna_group('none'))
   if ant_free.find('1a') == -1:
-    terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved. It could be currently used for another project, or the previous user did not release the antenna after their observation.")
+    terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved. It could be currently used for another project, or the previous user did not release the antenna after their observation.\n")
   else:
     ac.move_ant_group(antennas, 'none', 'atagr')
     terminal_text.insert(0.0, "You have reserved Antenna 1a!")
@@ -184,7 +184,7 @@ ra_dec_entry.pack(padx=5, pady=5)
 
 def release_antenna_clicked():
     ac.move_ant_group(antennas, 'atagr', 'none')
-    terminal_text.insert(0.0, "Antenna 1a has been released")
+    terminal_text.insert(0.0, "Antenna 1a has been released.\n")
 
 release_ant_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Release Antenna 1a", command=release_antenna_clicked)
 release_ant_button.pack(padx=5, pady=5)
