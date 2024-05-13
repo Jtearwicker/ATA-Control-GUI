@@ -98,7 +98,7 @@ show_ant_status_button.pack(padx=5, pady=5)
 def reserve_ant_clicked():
   antennas = ['1a']
   #check if antenna 1a is already reserved
-  ant_free = ac.list_antenna_group('none')
+  ant_free = str(ac.list_antenna_group('none'))
   if ant_free.find('1a') == -1:
     terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved. It could be currently used for another project, or the previous user did not release the antenna after their observation.")
   else:
