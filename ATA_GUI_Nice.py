@@ -95,8 +95,8 @@ def show_ant_status_clicked():
 show_ant_status_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Show Antenna Status", command=show_ant_status_clicked)
 show_ant_status_button.pack(padx=5, pady=5)
 
+antennas = ['1a']
 def reserve_ant_clicked():
-  antennas = ['1a']
   #check if antenna 1a is already reserved
   ant_free = str(ac.list_antenna_group('none'))
   if ant_free.find('1a') == -1:
