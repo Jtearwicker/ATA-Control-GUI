@@ -183,8 +183,14 @@ ra_dec_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder
 ra_dec_entry.pack(padx=5, pady=5)
 
 def release_antenna_clicked():
+    ant_free = str(ac.list_antenna_group('none'))
+  if ant_free.find('1a') != -1:
+    terminal_text.insert(0.0, "Antenna 1a has already been released\n")
+  else:
     ac.move_ant_group(antennas, 'atagr', 'none')
     terminal_text.insert(0.0, "Antenna 1a has been released.\n")
+
+    
 
 release_ant_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Release Antenna 1a", command=release_antenna_clicked)
 release_ant_button.pack(padx=5, pady=5)
