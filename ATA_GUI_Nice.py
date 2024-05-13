@@ -186,7 +186,7 @@ def release_antenna_clicked():
     ac.move_ant_group(antennas, 'atagr', 'none')
     terminal_text.insert(0.0, "Antenna 1a has been released")
 
-release_ant_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Release Antenna 1a", command=release_ant_clicked)
+release_ant_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Release Antenna 1a", command=release_antenna_clicked)
 release_ant_button.pack(padx=5, pady=5)
 
 
