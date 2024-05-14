@@ -182,7 +182,7 @@ def track_source_clicked():
     ra = ra_entry.get()
     dec = dec_entry.get()
     print(ra)
-    print(ra.dtype())
+    print(type(ra))
     #ac.track_source(antennas, radec=[Angle(str(ra_entry.get())).hour, Angle(str(dec_entry.get())).deg])
 
 track_source_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Track Source", command=track_source_clicked)
