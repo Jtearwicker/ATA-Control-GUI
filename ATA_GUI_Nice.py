@@ -173,11 +173,16 @@ def list_avail_targets_clicked():
 avail_targets_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
 
-def track_source_clicked():
-  ac.track_source(antennas, radec=[Angle('').hour, Angle('').deg])
+ra_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="RA")
+dec_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="Dec")
+ra_entry.pack(padx=5, pady=5)
+dec_entry.pack(padx=5, pady=5)
 
-ra_dec_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="RA Dec")
-ra_dec_entry.pack(padx=5, pady=5)
+def track_source_clicked():
+  ac.track_source(antennas, radec=[Angle(ra_entry).deg, Angle(dec_entry).deg])
+
+track_source_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Track Source", command=track_source_clicked)
+track_source_button.pack(padx=5, pady=5)
 
 def release_antenna_clicked():
     ant_free = str(ac.list_antenna_group('none'))
@@ -186,8 +191,6 @@ def release_antenna_clicked():
     else:
         ac.move_ant_group(antennas, 'atagr', 'none')
         terminal_text.insert(0.0, "Antenna 1a has been released.\n")
-
-    
 
 release_ant_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Release Antenna 1a", command=release_antenna_clicked)
 release_ant_button.pack(padx=5, pady=5)
