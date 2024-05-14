@@ -166,15 +166,15 @@ def ga2equ(ga):
 
 def list_avail_targets_clicked():
     for i in range(0,35):
-    dd_radec = ga2equ(targets[i])
-    c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
-    RA = c.ra.hms
-    DEC = c.dec.dms
-    elevation = radec2alt(ga2equ(targets[i]))
-    
-    if elevation>20:
-        terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
+        dd_radec = ga2equ(targets[i])
+        c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
+        RA = c.ra.hms
+        DEC = c.dec.dms
+        elevation = radec2alt(ga2equ(targets[i]))
         
+        if elevation>20:
+            terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
+            
         
 avail_targets_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
