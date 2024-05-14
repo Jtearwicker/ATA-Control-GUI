@@ -109,7 +109,7 @@ def reserve_ant_clicked():
 reserve_ant_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Reserve Antenna 1a", command=reserve_ant_clicked)
 reserve_ant_button.pack(padx=5, pady=5)
 
-freq_text = customtkinter.CTkTextbox(master=tabview.tab("Antenna Setup"), height=100, width=210,fg_color="transparent")
+freq_text = customtkinter.CTkTextbox(master=tabview.tab("Antenna Setup"), height=30, width=210,fg_color="transparent")
 freq_text.pack(padx=5, pady=5)
 freq_text.insert(tk.END, "Enter frequency below (MHz)\nUse 1420.405 for Hydrogen")
 
