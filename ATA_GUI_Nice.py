@@ -13,6 +13,7 @@ from math import *
 import numpy as np
 import pyautogui
 from tkinterweb import HtmlFrame
+import datetime
 customtkinter.CTkButton
 
 
@@ -120,7 +121,7 @@ def set_freq_and_autotune_clicked():
     freq = float(freq_entry.get())
     ac.set_freq(freq, antennas, 'd')
     ac.autotune(antennas)
-    terminal_text.insert(0.0, "Frequency set to "+str(freq)+ "and autotuned.\n")
+    terminal_text.insert(0.0, "Frequency set to "+str(freq)+" MHz and autotuned.\n")
 
 set_freq_and_autotune_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Set frequency and \nautotune antennas", command=set_freq_and_autotune_clicked)
 set_freq_and_autotune_button.pack(padx=5, pady=5)
@@ -136,7 +137,7 @@ targets = [[0,0],[10,0],[20,0],[30,0],[40,0],[50,0],[60,0],[70,0],[80,0],
 [270,0],[280,0],[290,0],[300,0],[310,0],[320,0],[340,0],[350,0]]
 
 ATA_location = EarthLocation(lat=40.817 * u.deg, lon=-121.47 * u.deg, height=3235 * u.m)
-obs_time = Time('2024-05-07 15:00:00')
+obs_time = datetime.datetime.now()
 alt_az = AltAz(location=ATA_location, obstime=obs_time)
 
 def radec2alt(RADEC):
@@ -164,16 +165,9 @@ def list_avail_targets_clicked():
     for i in range(0,35):
         elevation = radec2alt(ga2equ(targets[i]))
         if elevation>20:
-            print("Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4])
+            terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] \n)
+            
 
-
-date_time_text = customtkinter.CTkTextbox(master=tabview.tab("Observe"), height=100, width=190,fg_color="transparent")
-date_time_text.pack(padx=5, pady=5)
-date_time_text.insert(tk.END, "Enter the current date and time\nin format (YYYY-MM-DD HH:MM:SS)")
-
-
-date_time_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="Date Time")
-date_time_entry.pack(padx=5, pady=5)
 
 avail_targets_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
