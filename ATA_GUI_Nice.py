@@ -117,7 +117,8 @@ freq_entry = customtkinter.CTkEntry(master=tabview.tab("Antenna Setup"), width=8
 freq_entry.pack(padx=5, pady=5)
 
 def set_freq_and_autotune_clicked():
-  ac.set_freq(float(freq_entry), antennas, 'd')
+    freq = float(freq_entry.get())
+    ac.set_freq(freq, antennas, 'd')
   #ac.autotune(antennas)
 
 set_freq_and_autotune_button = customtkinter.CTkButton(master=tabview.tab("Antenna Setup"), text="Set frequency and \nautotune antennas", command=set_freq_and_autotune_clicked)
