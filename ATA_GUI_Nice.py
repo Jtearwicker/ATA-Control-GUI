@@ -161,17 +161,39 @@ def ga2equ(ga):
     dec = asin( cos(b)*cos(pole_dec)*sin(l-posangle) + sin(b)*sin(pole_dec) )
     return np.array([degrees(ra), degrees(dec)])
 
+def decdeg2dms(dd):
+    mult = -1 if dd < 0 else 1
+    mnt,sec = divmod(abs(dd)*3600, 60)
+    deg,mnt = divmod(mnt, 60)
+    degree = str(int(mult*deg))
+    minute = str(int(mnt))
+    second = str(sec)
+    return degree+"d"+minute+"m"+second[:4]+"s"
+
+def decdeg2hms(dd):
+    mult = -1 if dd < 0 else 1
+    mnt,sec = divmod(abs(dd)*3600, 60)
+    deg,mnt = divmod(mnt, 60)
+    hour = str(int(mult*deg/15))
+    minute = str(int(mnt))
+    second = str(sec)
+    return hour+"h"+minute+"m"+second[:4]+"s"
+
 def list_avail_targets_clicked():
     for i in range(0,35):
-        radec = ga2equ(targets[i])
+        dd_radec = ga2equ(targets[i])
+        ra = decdeg2hms(targets[i][0])
+        dec = decdec2dms(targets[i][1])
         elevation = radec2alt(ga2equ(targets[i]))
         if elevation>20:
-            terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA Dec = "+str(radec)+".\n")
+            terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA Dec = "+ra, dec)+".\n")
             
 
 
 avail_targets_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
+
+
 
 ra_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="RA")
 dec_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="Dec")
