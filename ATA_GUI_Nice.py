@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 import customtkinter
-#import webview
+import webview
 import os
 import subprocess
 import numpy as np
@@ -216,6 +216,16 @@ def release_antenna_clicked():
 
 release_ant_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Release Antenna 1a", command=release_antenna_clicked)
 release_ant_button.pack(padx=5, pady=5)
+
+def camera_clicked():
+    # define an instance of tkinter 
+    tk = Tk() 
+    tk.geometry("800x450") 
+    webview.create_window('ATA Live View', 'http://10.3.0.30/view/view.shtml?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1') 
+    webview.start()
+
+camera_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Show ATA live camera", command=camera_clicked)
+camera_button.pack(padx=5, pady=5)
 
 
 root.mainloop()
