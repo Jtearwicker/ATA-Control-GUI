@@ -101,7 +101,7 @@ def reserve_ant_clicked():
   #check if antenna 1a is already reserved
   ant_free = str(ac.list_antenna_group('none'))
   if ant_free.find('1a') == -1:
-    terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved. It might be being currently used for another project, or the previous user did not release the antenna.\n")
+    terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
   else:
     ac.move_ant_group(antennas, 'none', 'atagr')
     terminal_text.insert(0.0, "You have reserved Antenna 1a!\n")
@@ -183,7 +183,7 @@ def track_source_clicked():
     dec = dec_entry.get()
     #print(ra)
     #print(type(ra))
-    ac.track_source(antennas, radec=[Angle(ra_entry.get()).deg, Angle(dec_entry.get()).deg])
+    ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
 
 track_source_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Track Source", command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
