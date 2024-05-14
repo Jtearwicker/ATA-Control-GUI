@@ -60,7 +60,6 @@ def run_server_command(command):
 
 #calibration tabs
 def test_usrp_clicked():
-    terminal_text.insert(0.0, "Testing USRP...\n")
     run_command("/opt/ata-flowgraphs/usrp_test.py")
 
 
@@ -68,7 +67,6 @@ test_usrp_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text
 test_usrp_button.pack(padx=5, pady=5)
 
 def reset_clocking_clicked():
-    terminal_text.insert(0.0, "Resetting USRP clocking...\n")
     run_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
 
 reset_clocking_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Reset Clocking", command=reset_clocking_clicked)
