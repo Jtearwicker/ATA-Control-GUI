@@ -192,7 +192,7 @@ def track_source_clicked():
     #print(ra)
     #print(type(ra))
     ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
-    terminal_text.insert(0.0, "Arrived at RA "+ra+" Dec"+dec+"\n")
+    terminal_text.insert(0.0, "Arrived at RA "+ra+" Dec "+dec+"\n")
 
 track_source_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Track Source", command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
