@@ -7,7 +7,7 @@ import os
 import subprocess
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import AltAz, EarthLocation, SkyCoord
+from astropy.coordinates import AltAz, EarthLocation, SkyCoord, Angle
 from astropy.time import Time
 from math import *
 import numpy as np
