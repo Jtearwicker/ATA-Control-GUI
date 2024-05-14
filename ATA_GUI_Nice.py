@@ -186,7 +186,7 @@ def list_avail_targets_clicked():
         dec = decdec2dms(targets[i][1])
         elevation = radec2alt(ga2equ(targets[i]))
         if elevation>20:
-            terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA Dec = "+ra, dec)+".\n")
+            terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA Dec = "+ra, dec+".\n")
             
 
 
