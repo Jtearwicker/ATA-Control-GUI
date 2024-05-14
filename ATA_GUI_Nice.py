@@ -165,7 +165,7 @@ def list_avail_targets_clicked():
     for i in range(0,35):
         elevation = radec2alt(ga2equ(targets[i]))
         if elevation>20:
-            terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] \n)
+            terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +"\n")
             
 
 
