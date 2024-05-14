@@ -73,7 +73,7 @@ reset_clocking_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"),
 reset_clocking_button.pack(padx=5, pady=5)
 
 def server_clicked():
-    terminal_text.insert(0.0, "Conncting to server... Please wait 60 seconds before pressing any buttons.\n")
+    terminal_text.insert(0.0, "Conncting to server... Please wait 60 seconds before proceeding.\n")
     run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
 
 server_button = customtkinter.CTkButton(master=tabview.tab("Calibrate"), text="Connect to Server", command=server_clicked)
@@ -175,7 +175,7 @@ def list_avail_targets_clicked():
         if elevation>20:
             terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
             
-        
+
 avail_targets_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
 
@@ -191,10 +191,19 @@ def track_source_clicked():
     dec = dec_entry.get()
     #print(ra)
     #print(type(ra))
+    terminal_text.insert(0.0, "Slewing to source...\n")
     ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
 
 track_source_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Track Source", command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
+
+
+def park_antenna_clicked():
+    ac.park_antennas(antennas)
+    terminal_text.insert(0.0, "Antenna 1a has been parked.\n")
+
+park_ant_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Park Antenna 1a", command=park_antenna_clicked)
+park_ant_button.pack(padx=5, pady=5)
 
 def release_antenna_clicked():
     ant_free = str(ac.list_antenna_group('none'))
