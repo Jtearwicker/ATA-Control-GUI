@@ -137,7 +137,11 @@ targets = [[0,0],[10,0],[20,0],[30,0],[40,0],[50,0],[60,0],[70,0],[80,0],
 [270,0],[280,0],[290,0],[300,0],[310,0],[320,0],[340,0],[350,0]]
 
 ATA_location = EarthLocation(lat=40.817 * u.deg, lon=-121.47 * u.deg, height=3235 * u.m)
-obs_time = datetime.datetime.now()
+utc = pytz.timezone('UTC')
+now = utc.localize(datetime.datetime.utcnow())
+la = pytz.timezone('America/Los_Angeles')
+obs_time = now.astimezone(la)
+#obs_time = datetime.datetime.now()
 alt_az = AltAz(location=ATA_location, obstime=obs_time)
 
 def radec2alt(RADEC):
