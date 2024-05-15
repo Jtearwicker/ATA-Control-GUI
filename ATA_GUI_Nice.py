@@ -14,6 +14,8 @@ import numpy as np
 import pyautogui
 from tkinterweb import HtmlFrame
 import datetime
+from pytz import timezone
+import pytz
 customtkinter.CTkButton
 
 
