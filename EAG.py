@@ -1,13 +1,20 @@
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
 import customtkinter
 import os
+import subprocess
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord, Angle
 from astropy.time import Time
+from math import *
+import numpy as np
+import pyautogui
+from tkinterweb import HtmlFrame
 import datetime
 from pytz import timezone
 import pytz
-import time
 from ATATools import ata_control as ac
 
 # Create the main root
@@ -23,7 +30,7 @@ control_frame.pack()
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
-terminal_frame.pack()
+terminal_frame.pack(side=BOTTOM)
 # Create a text widget to display the terminal output
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
 terminal_text.pack()
@@ -43,6 +50,7 @@ def run_reset_command(command):
 def run_server_command(command):
 	terminal_text.insert(0.0, "Connecting to server...\n")
 	return os.popen(command)
+	time.sleep(45)
 	terminal_text.insert(0.0, "Successfully connected to server.\n")
 
 antennas = ['1a']
@@ -51,7 +59,6 @@ def activate_antenna_clicked():
 	run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
 	run_test_command("/opt/ata-flowgraphs/usrp_test.py")
 	run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
-	time.sleep(45)
 	ant_free = str(ac.list_antenna_group('none'))
 	if ant_free.find('1a') == -1:
 		terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
@@ -61,7 +68,7 @@ def activate_antenna_clicked():
 	ac.set_freq(freq, antennas, 'd')
 	ac.autotune(antennas)
 	terminal_text.insert(0.0, "Frequency set to 1420.406 MHz and autotuned.\n")
-	terminal_text.insert(0.0, ac.get_ascii_status()[:344]+"\n")
+	terminal_text.insert(0.0, ac.get_ascii_status()[:346]+"\n")
 
 def shut_down_antenna_clicked():
 	run_server_command("pkill -f \"python /home/vgajjar/reu-2023/Hydrogen_line/server.py\"")
