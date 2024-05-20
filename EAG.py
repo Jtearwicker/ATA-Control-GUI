@@ -30,9 +30,9 @@ terminal_text.pack()
 
 def run_test_command(command):
 	terminal_text.insert(0.0, "Testing USRPs...\n")
-  stream = os.popen(command)
-  out = stream.read()
-  terminal_text.insert(0.0, out)
+	stream = os.popen(command)
+	out = stream.read()
+	terminal_text.insert(0.0, out)
 
 def run_reset_command(command):
 	terminal_text.insert(0.0, "Resetting USRPs clocking...\n")
