@@ -52,7 +52,7 @@ def activate_antenna_clicked():
 	ac.set_freq(freq, antennas, 'd')
 	ac.autotune(antennas)
 	terminal_text.insert(0.0, "Frequency set to 1420.406 MHz and autotuned.\n")
-	terminal_text.insert(0.0, ac.get_ascii_status())
+	terminal_text.insert(0.0, ac.get_ascii_status()[:362])
 
 def shut_down_antenna_clicked():
 	run_server_command("pkill -f \"python /home/vgajjar/reu-2023/Hydrogen_line/server.py\"")
