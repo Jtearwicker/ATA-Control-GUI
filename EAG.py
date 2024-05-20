@@ -97,7 +97,6 @@ utc = pytz.timezone('UTC')
 now = utc.localize(datetime.datetime.utcnow())
 la = pytz.timezone('America/Los_Angeles')
 obs_time = now.astimezone(la)
-#obs_time = datetime.datetime.now()
 alt_az = AltAz(location=ATA_location, obstime=obs_time)
 
 def radec2alt(RADEC):
@@ -130,9 +129,9 @@ def list_avail_targets_clicked():
 		DEC = c.dec.dms
 		elevation = radec2alt(ga2equ(targets[i]))
 
-	if elevation>20:
-		terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
-	          
+		if elevation>20:
+			terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
+		          
 def track_source_clicked():
     ra = ra_entry.get()
     dec = dec_entry.get()
