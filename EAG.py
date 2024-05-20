@@ -8,6 +8,7 @@ import datetime
 from pytz import timezone
 import pytz
 import time
+from ATATools import ata_control as ac
 
 # Create the main root
 root = customtkinter.CTk()
