@@ -1,4 +1,5 @@
 import customtkinter
+import os
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord, Angle
