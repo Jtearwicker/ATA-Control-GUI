@@ -133,15 +133,15 @@ def track_source_clicked():
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
-avail_targets_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Show Available Targets", command=list_avail_targets_clicked)
+avail_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
 
-ra_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="RA")
-dec_entry = customtkinter.CTkEntry(master=tabview.tab("Observe"), placeholder_text="Dec")
+ra_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="RA")
+dec_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Dec")
 ra_entry.pack(padx=5, pady=5)
 dec_entry.pack(padx=5, pady=5)
 
-track_source_button = customtkinter.CTkButton(master=tabview.tab("Observe"), text="Track Source", command=track_source_clicked)
+track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
 
 shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
