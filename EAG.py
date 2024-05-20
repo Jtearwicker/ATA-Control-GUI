@@ -70,3 +70,10 @@ activate_antenna_button.pack(padx=5, pady=5)
 
 shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(padx=5, pady=5)
+
+
+
+
+
+
+root.mainloop()
