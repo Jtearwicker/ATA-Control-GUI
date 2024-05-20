@@ -43,10 +43,10 @@ def activate_antenna_clicked():
 	terminal_text.insert(0.0, "Connected to server.\n")
 	ant_free = str(ac.list_antenna_group('none'))
     if ant_free.find('1a') == -1:
-      terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
+    	terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
   	else:
-	  ac.move_ant_group(antennas, 'none', 'atagr')
-	  terminal_text.insert(0.0, "You have reserved Antenna 1a!\n")
+		ac.move_ant_group(antennas, 'none', 'atagr')
+		terminal_text.insert(0.0, "You have reserved Antenna 1a!\n")
     ac.set_freq(freq, antennas, 'd')
     ac.autotune(antennas)
     terminal_text.insert(0.0, "Frequency set to 1420.406 MHz and autotuned.\n")
