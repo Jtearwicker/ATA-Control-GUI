@@ -54,16 +54,16 @@ def activate_antenna_clicked():
 
 def shut_down_antenna_clicked():
 	run_server_command("pkill -f \"python /home/vgajjar/reu-2023/Hydrogen_line/server.py\"")
-    terminal_text.insert(0.0, "Disconnected from server.\n")
-    terminal_text.insert(0.0, "Parking Antenna 1a...\n")
-    ac.park_antennas(antennas)
-    terminal_text.insert(0.0, "Antenna 1a has been parked.\n")
-    ant_free = str(ac.list_antenna_group('none'))
-    if ant_free.find('1a') != -1:
-        terminal_text.insert(0.0, "Antenna 1a has already been released\n")
-    else:
-        ac.move_ant_group(antennas, 'atagr', 'none')
-        terminal_text.insert(0.0, "Antenna 1a has been released.\n")
+	terminal_text.insert(0.0, "Disconnected from server.\n")
+	terminal_text.insert(0.0, "Parking Antenna 1a...\n")
+	ac.park_antennas(antennas)
+	terminal_text.insert(0.0, "Antenna 1a has been parked.\n")
+	ant_free = str(ac.list_antenna_group('none'))
+	if ant_free.find('1a') != -1:
+		terminal_text.insert(0.0, "Antenna 1a has already been released\n")
+	else:
+		ac.move_ant_group(antennas, 'atagr', 'none')
+		terminal_text.insert(0.0, "Antenna 1a has been released.\n")
 
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
