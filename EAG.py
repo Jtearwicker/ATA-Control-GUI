@@ -68,7 +68,10 @@ def activate_antenna_clicked():
 	ac.set_freq(freq, antennas, 'd')
 	ac.autotune(antennas)
 	terminal_text.insert(0.0, "Frequency set to 1420.406 MHz and autotuned.\n")
-	terminal_text.insert(0.0, ac.get_ascii_status()[:346]+"\n")
+	terminal_text.insert(0.0, ac.get_ascii_status()[:348]+"\n")
+
+def show_ant_status_clicked():
+  terminal_text.insert(0.0, ac.get_ascii_status())
 
 def shut_down_antenna_clicked():
 	run_server_command("pkill -f \"python /home/vgajjar/reu-2023/Hydrogen_line/server.py\"")
@@ -139,6 +142,9 @@ def track_source_clicked():
 
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
+
+show_ant_status_button = customtkinter.CTkButton(master=control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
+show_ant_status_button.pack(padx=5, pady=5)
 
 avail_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
