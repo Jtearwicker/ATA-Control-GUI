@@ -92,7 +92,7 @@ targets = [[0,0],[10,0],[20,0],[30,0],[40,0],[50,0],[60,0],[70,0],[80,0],
 [180,0],[190,0],[200,0],[210,0],[220,0],[230,0],[240,0],[250,0],[260,0],
 [270,0],[280,0],[290,0],[300,0],[310,0],[320,0],[340,0],[350,0]]
 
-ATA_location = EarthLocation(lat=40.817 * u.deg, lon=-121.47 * u.deg, height=3235 * u.m)
+ATA_location = EarthLocation(lat=40.817 * u.deg, lon=121.47 * u.deg, height=3235 * u.m)
 utc = pytz.timezone('UTC')
 now = utc.localize(datetime.datetime.utcnow())
 la = pytz.timezone('America/Los_Angeles')
