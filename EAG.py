@@ -231,7 +231,7 @@ def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
 		plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
 		plt.plot(obs_x, obs_y, color="red", linewidth=2)
 		plt.plot(2800, 3850, marker='o', color="white")
-		plt.imshow(data) 
+		plt.imshow(milky_way_img) 
 		plt.show()
 
 gl_min_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
