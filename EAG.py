@@ -169,8 +169,10 @@ def list_avail_targets_clicked():
 '''
 	          
 def track_source_clicked():
-    ra = ra_entry.get()
-    dec = dec_entry.get()
+		gl = galactic_longitude_entry.get()
+		radec = ga2equ([gl,0])
+    ra = radec[0]
+    dec = radec[1]
     #print(ra)
     #print(type(ra))
     ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
@@ -200,9 +202,10 @@ track_source_button.pack(padx=5, pady=5)
 shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(padx=5, pady=5)
 
-check_var = customtkinter.StringVar(value="off")
-checkbox = customtkinter.CTkCheckBox(master=control_frame, text="Show Galaxy Plot", variable=check_var, onvalue="on", offvalue="off")
+#check_var = customtkinter.StringVar(value="off", command=trigger_check_box)
+#checkbox = customtkinter.CTkCheckBox(master=control_frame, text="Show Galaxy Plot", variable=check_var, onvalue="on", offvalue="off")
 
+'''
 def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
 		if(len(ga_min_entry.get())==0):
 			ga_min = 0
@@ -250,5 +253,5 @@ gl_obs_entry.pack(padx=5, pady=5)
 
 plot_galaxy_button = customtkinter.CTkButton(master=control_frame, text="Plot Available Sources", command=plot_galaxy(gl_min_entry,gl_max_entry,gl_obs_entry))
 plot_galaxy_button.pack(padx=5, pady=5)
-
+'''
 root.mainloop()
