@@ -205,9 +205,9 @@ def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
     ga_min = ga_min_entry.get()
     ga_max = ga_max_entry.get()
     ga_obs = ga_obs_entry.get()
-    min_pos = int(ga_min)
-    max_pos = int(ga_max)
-    obs_pos = int(ga_obs)
+    min_pos = int(float(ga_min))
+    max_pos = int(float(ga_max))
+    obs_pos = int(float(ga_obs))
     px_min = pxlib[min_pos]
     px_max = pxlib[max_pos]
     px_obs = pxlib[obs_pos]
