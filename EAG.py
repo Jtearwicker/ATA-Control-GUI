@@ -172,7 +172,7 @@ def decdeg2dms(dd):
    minutes,seconds = divmod(dd*3600,60)
    degrees,minutes = divmod(minutes,60)
    degrees = degrees if is_positive else -degrees
-   return str(degrees)+"d"+str(minutes)+"m"+str(seconds)+"s"
+   return str(int(degrees))+"d"+str(int(minutes))+"m"+str(int(seconds))+"s"
 
 def track_source_clicked():
 	gl = int(galactic_longitude_entry.get())
