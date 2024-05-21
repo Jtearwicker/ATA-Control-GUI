@@ -32,8 +32,8 @@ control_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
 control_frame.pack()
 
 #Galaxy pointing image frame
-image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-image_frame.pack()
+#image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
+#image_frame.pack()
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
@@ -243,7 +243,7 @@ gl_max_entry.pack(padx=5, pady=5)
 gl_obs_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
 gl_obs_entry.pack(padx=5, pady=5)
 
-plot_galaxy_button = customtkinter.CTkButton(master=control_frame, text="Plot available sources", command=plot_galaxy(gl_min_entry,gl_max_entry,gl_obs_entry))
+plot_galaxy_button = customtkinter.CTkButton(master=control_frame, text="Plot Available Sources", command=plot_galaxy(gl_min_entry,gl_max_entry,gl_obs_entry))
 plot_galaxy_button.pack(padx=5, pady=5)
 
 root.mainloop()
