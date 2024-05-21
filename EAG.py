@@ -183,6 +183,7 @@ ga_obs_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL
 ga_obs_entry.pack(padx=5, pady=5)
 
 def show_pic_clicked(ga_min_entry,ga_max_entry,ga_obs_entry):
+	
 	if(len(ga_min_entry.get())==0):
 		ga_min = 0
 	else:
@@ -214,7 +215,7 @@ def show_pic_clicked(ga_min_entry,ga_max_entry,ga_obs_entry):
 	plt.plot(obs_x, obs_y, color="red", linewidth=2)
 	plt.plot(2800, 3850, marker='o', color="white")
 	plt.imshow(milky_way_img) 
-	plt.show()
+	plt.savefig("galaxy_visibility.jpg")
 
 show_pic_button = customtkinter.CTkButton(master=control_frame, text="Show Galaxy Pic", command=show_pic_clicked(ga_min_entry,ga_max_entry,ga_obs_entry))
 show_pic_button.pack(padx=5, pady=5)
