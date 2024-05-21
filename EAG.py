@@ -201,9 +201,9 @@ shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="S
 shut_down_antenna_button.pack(padx=5, pady=5)
 
 def plot_galaxy(ga_min, ga_max, ga_obs):
-    min_pos = int(ga_min)/10
-    max_pos = int(ga_max)/10
-    obs_pos = int(ga_obs)/10
+    min_pos = int(ga_min.get())/10
+    max_pos = int(ga_max.get())/10
+    obs_pos = int(ga_obs.get())/10
     px_min = pxlib[min_pos]
     px_max = pxlib[max_pos]
     px_obs = pxlib[obs_pos]
