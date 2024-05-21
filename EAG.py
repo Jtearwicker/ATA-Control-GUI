@@ -146,8 +146,9 @@ def list_avail_targets_clicked():
 		terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
 		avail_targets.append(targets[i])
 
-	ga_min = min(avail_targets[][0])
-	ga_max = max(avail_targets[][0])
+	avail_targets_long = avail_targets[:][0]
+	ga_min = min(avail_targets_long)
+	ga_max = max(avail_targets_long)
 	min_pos = int(ga_min/10)
 	max_pos = int(ga_max/10)
 	px_min = pxlib[min_pos]
