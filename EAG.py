@@ -226,7 +226,7 @@ def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
 		vis_max_y = [3850, px_max[1]]
 		obs_x = [2800, px_obs[0]]
 		obs_y = [3850, px_obs[1]]
-		milky_way_img = image.imread(MWimg.jpg)
+		milky_way_img = image.imread("MWimg.jpg")
 		plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
 		plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
 		plt.plot(obs_x, obs_y, color="red", linewidth=2)
