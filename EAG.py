@@ -200,14 +200,20 @@ track_source_button.pack(padx=5, pady=5)
 shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(padx=5, pady=5)
 
-ga_min_entry.set("0")
-ga_max_entry=0
-ga_obs_entry=0
 def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
-
-    ga_min = ga_min_entry.get()
-    ga_max = ga_max_entry.get()
-    ga_obs = ga_obs_entry.get()
+		if(len(ga_min_entry)==0):
+			ga_min = 0
+		else:
+    	ga_min = ga_min_entry.get()
+    if(len(ga_max_entry)==0):
+			ga_max = 0
+		else:	
+    	ga_max = ga_max_entry.get()
+  	if(len(ga_obs_entry)==0):
+			ga_obs = 0
+		else:
+    	ga_obs = ga_obs_entry.get()
+    	
     min_pos = int(float(ga_min))
     max_pos = int(float(ga_max))
     obs_pos = int(float(ga_obs))
