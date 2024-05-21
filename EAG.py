@@ -57,7 +57,6 @@ def run_reset_command(command):
 def run_server_command(command):
 	terminal_text.insert(0.0, "Connecting to server...\n")
 	return os.popen(command)
-	time.sleep(45)
 	terminal_text.insert(0.0, "Successfully connected to server.\n")
 
 antennas = ['1a']
@@ -65,8 +64,9 @@ freq = "1420.406"
 def activate_antenna_clicked():
 	terminal_text.insert(0.0, "Calibrating.......\n")
 	run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
-	run_test_command("/opt/ata-flowgraphs/usrp_test.py")
+	#run_test_command("/opt/ata-flowgraphs/usrp_test.py")
 	run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
+	time.sleep(45)
 	ant_free = str(ac.list_antenna_group('none'))
 	if ant_free.find('1a') == -1:
 		terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
@@ -144,7 +144,7 @@ def list_avail_targets_clicked():
 		elevation = radec2alt(ga2equ(targets[i]))
 
 		if elevation>20:
-			terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
+			terminal_text.insert(0.0, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]) #+" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
 
 '''
 	ga_min = min(avail_targets_long)
