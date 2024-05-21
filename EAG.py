@@ -181,7 +181,7 @@ def track_source_clicked():
 	c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
 	RA = c.ra.hms
 	DEC = c.dec.dms
-	ac.track_source(antennas, radec=[Angle(RA).deg, Angle(DEC).deg])
+	ac.track_source(antennas, radec=[Angle(RA).hour, Angle(DEC).deg])
 	terminal_text.insert(0.0, "Arrived at RA "+RA+" Dec "+DEC+"\n")
 
 
