@@ -16,6 +16,9 @@ import datetime
 from pytz import timezone
 import pytz
 from ATATools import ata_control as ac
+from matplotlib import image 
+from matplotlib import pyplot as plt
+from PIL import Image
 
 # Create the main root
 root = customtkinter.CTk()
@@ -26,7 +29,11 @@ customtkinter.set_appearance_mode("Light")
 
 #Control tabs
 control_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-control_frame.pack()
+control_frame.pack(side=LEFT)
+
+#Galaxy pointing image frame
+image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
+image_frame.pack(side=RIGHT)
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
@@ -120,8 +127,14 @@ def ga2equ(ga):
     dec = asin( cos(b)*cos(pole_dec)*sin(l-posangle) + sin(b)*sin(pole_dec) )
     return np.array([degrees(ra), degrees(dec)])
 
+pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[566, 1936],[300, 2430],[350, 2903],[400, 3376],[450, 3850],
+									[733, 4140],[1016, 4430],[1300, 4720],[1550, 4846],[1800, 4973],[2050, 5100],[2300, 5140],[2550, 5180],[2800, 5220],[3033, 5180],
+									[3266, 5140],[3500, 5100],[3766, 4973],[4033, 4846],[4300, 4720],[4583, 4430],[4866, 4140],[5150, 3850],[5200, 3376],[5250, 2903],
+									[5300, 2430],[5026, 1936],[4753, 1443],[4480, 950],[3920, 800],[3360, 650]])
+
+avail_targets = []
+
 def list_avail_targets_clicked():
-	terminal_text.insert(0.0, "The current time should be "+str(obs_time)+" local time.\n")
 	for i in range(0,35):
 		dd_radec = ga2equ(targets[i])
 		c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
@@ -129,8 +142,29 @@ def list_avail_targets_clicked():
 		DEC = c.dec.dms
 		elevation = radec2alt(ga2equ(targets[i]))
 
-		if elevation>20:
-			terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
+	if elevation>20:
+		terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
+		avail_targets.append(targets[i])
+
+	ga_min = min(avail_targets[:][0])
+	ga_max = max(avail_targets[:][0])
+	min_pos = int(ga_min/10)
+	max_pos = int(ga_max/10)
+	px_min = pxlib[min_pos]
+	px_max = pxlib[max_pos]
+	vis_min_x = [2800, px_min[0]]
+  vis_min_y = [3850, px_min[1]]
+  vis_max_x = [2800, px_max[0]]
+  vis_max_y = [3850, px_max[1]]
+  milky_way_img = image.imread(MWimg.jpg)
+  plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
+  plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
+  plt.plot(2800, 3850, marker='o', color="white")
+  plt.imshow(data) 
+  #plt.show()
+  vis_image = plt.savefig('vis_image.png')
+  MW_image = customtkinter.CTkImage(light_image = Image.open("vis_image.png"))
+
 		          
 def track_source_clicked():
     ra = ra_entry.get()
@@ -139,6 +173,32 @@ def track_source_clicked():
     #print(type(ra))
     ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
     terminal_text.insert(0.0, "Arrived at RA "+ra+" Dec "+dec+"\n")
+
+
+
+def plot_galaxy(ga_min, ga_max, ga_obs):
+    min_pos = int(ga_min/10)
+    max_pos = int(ga_max/10)
+    obs_pos = int(ga_obs/10)
+    px_min = pxlib[min_pos]
+    px_max = pxlib[max_pos]
+    px_obs = pxlib[obs_pos]
+    vis_min_x = [2800, px_min[0]]
+    vis_min_y = [3850, px_min[1]]
+    vis_max_x = [2800, px_max[0]]
+    vis_max_y = [3850, px_max[1]]
+    obs_x = [2800, px_obs[0]]
+    obs_y = [3850, px_obs[1]]
+    milky_way_img = image.imread(MWimg.jpg)
+    plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
+    plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
+    plt.plot(obs_x, obs_y, color="red", linewidth=2)
+    plt.plot(2800, 3850, marker='o', color="white")
+    plt.imshow(data) 
+    plt.show()
+
+
+
 
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
@@ -149,10 +209,14 @@ show_ant_status_button.pack(padx=5, pady=5)
 avail_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
 
+'''
 ra_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="RA")
 dec_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Dec")
 ra_entry.pack(padx=5, pady=5)
 dec_entry.pack(padx=5, pady=5)
+'''
+galactic_longitude_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude")
+galactic_longitude_entry.pack(padx=5, pady=5)
 
 track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
