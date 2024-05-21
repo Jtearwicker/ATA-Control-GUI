@@ -168,9 +168,9 @@ def list_avail_targets_clicked():
 	          
 def track_source_clicked():
 	gl = int(galactic_longitude_entry.get())
-	radec = ga2equ([gl,0])
-	ra = radec[0]
-	dec = radec[1]
+	ra_dec = ga2equ([gl,0])
+	ra = str(ra_dec[0])
+	dec = str(ra_dec[1])
 	#print(ra)
 	#print(type(ra))
 	ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
