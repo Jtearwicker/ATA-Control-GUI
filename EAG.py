@@ -145,8 +145,9 @@ def list_avail_targets_clicked():
 	if elevation>20:
 		terminal_text.insert(0.0, "Galactic corrdinate "+str(targets[i])+" has an elevation of "+str(elevation)[0:4] +" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
 		avail_targets.append(targets[i])
+		#avail_targets_long = avail_targets[][0]
 
-	avail_targets_long = avail_targets[:][0]
+'''
 	ga_min = min(avail_targets_long)
 	ga_max = max(avail_targets_long)
 	min_pos = int(ga_min/10)
@@ -165,7 +166,7 @@ def list_avail_targets_clicked():
 	#plt.show()
 	vis_image = plt.savefig('vis_image.png')
 	MW_image = customtkinter.CTkImage(light_image = Image.open("vis_image.png"))
-
+'''
 	          
 def track_source_clicked():
     ra = ra_entry.get()
@@ -174,32 +175,6 @@ def track_source_clicked():
     #print(type(ra))
     ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
     terminal_text.insert(0.0, "Arrived at RA "+ra+" Dec "+dec+"\n")
-
-
-
-def plot_galaxy(ga_min, ga_max, ga_obs):
-    min_pos = int(ga_min/10)
-    max_pos = int(ga_max/10)
-    obs_pos = int(ga_obs/10)
-    px_min = pxlib[min_pos]
-    px_max = pxlib[max_pos]
-    px_obs = pxlib[obs_pos]
-    vis_min_x = [2800, px_min[0]]
-    vis_min_y = [3850, px_min[1]]
-    vis_max_x = [2800, px_max[0]]
-    vis_max_y = [3850, px_max[1]]
-    obs_x = [2800, px_obs[0]]
-    obs_y = [3850, px_obs[1]]
-    milky_way_img = image.imread(MWimg.jpg)
-    plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
-    plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
-    plt.plot(obs_x, obs_y, color="red", linewidth=2)
-    plt.plot(2800, 3850, marker='o', color="white")
-    plt.imshow(data) 
-    plt.show()
-
-
-
 
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
@@ -225,9 +200,37 @@ track_source_button.pack(padx=5, pady=5)
 shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(padx=5, pady=5)
 
+def plot_galaxy(ga_min, ga_max, ga_obs):
+    min_pos = int(ga_min/10)
+    max_pos = int(ga_max/10)
+    obs_pos = int(ga_obs/10)
+    px_min = pxlib[min_pos]
+    px_max = pxlib[max_pos]
+    px_obs = pxlib[obs_pos]
+    vis_min_x = [2800, px_min[0]]
+    vis_min_y = [3850, px_min[1]]
+    vis_max_x = [2800, px_max[0]]
+    vis_max_y = [3850, px_max[1]]
+    obs_x = [2800, px_obs[0]]
+    obs_y = [3850, px_obs[1]]
+    milky_way_img = image.imread(MWimg.jpg)
+    plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
+    plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
+    plt.plot(obs_x, obs_y, color="red", linewidth=2)
+    plt.plot(2800, 3850, marker='o', color="white")
+    plt.imshow(data) 
+    plt.show()
 
+gl_min_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
+gl_min_entry.pack(padx=5, pady=5)
 
+gl_max_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
+gl_max_entry.pack(padx=5, pady=5)
 
+gl_obs_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
+gl_obs_entry.pack(padx=5, pady=5)
 
+plot_galaxy_button = customtkinter.CTkButton(master=control_frame, text="Plot available sources", command=plot_galaxy_clicked(gl_min_entry,gl_max_entry,gl_obs_entry))
+plot_galaxy_button.pack(padx=5, pady=5)
 
 root.mainloop()
