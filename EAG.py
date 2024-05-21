@@ -201,7 +201,7 @@ shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="S
 shut_down_antenna_button.pack(padx=5, pady=5)
 
 check_var = customtkinter.StringVar(value="off")
-checkbox = customtkinter.CTkCheckBox(app, text="SHow Galaxy Plot", variable=check_var, onvalue="on", offvalue="off")
+checkbox = customtkinter.CTkCheckBox(master=control_frame, text="Show Galaxy Plot", variable=check_var, onvalue="on", offvalue="off")
 
 def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
 		if(len(ga_min_entry.get())==0):
