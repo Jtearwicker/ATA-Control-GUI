@@ -63,6 +63,7 @@ def run_server_command(command):
 antennas = ['1a']
 freq = "1420.406"
 def activate_antenna_clicked():
+	terminal_text.insert(0.0, "Calibrating.......\n")
 	run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
 	run_test_command("/opt/ata-flowgraphs/usrp_test.py")
 	run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
@@ -166,15 +167,6 @@ def list_avail_targets_clicked():
 	MW_image = customtkinter.CTkImage(light_image = Image.open("vis_image.png"))
 '''
 	          
-def decdeg2dms(dd):
-   is_positive = dd >= 0
-   dd = abs(dd)
-   minutes,seconds = divmod(dd*3600,60)
-   degrees,minutes = divmod(minutes,60)
-   degrees = degrees if is_positive else -degrees
-   return str(int(degrees))+"d"+str(int(minutes))+"m"+str(int(seconds))+"s"
-
-
 def track_source_clicked():
 	gl = int(galactic_longitude_entry.get())
 	dd_radec = ga2equ([gl,0])
@@ -185,17 +177,6 @@ def track_source_clicked():
 	terminal_text.insert(0.0, "Arrived at RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
 
 
-'''
-def track_source_clicked():
-	gl = int(galactic_longitude_entry.get())
-	dd_ra_dec = ga2equ([gl,0])
-	dms_ra = decdeg2dms(dd_ra_dec[0])
-	dms_dec = decdeg2dms(dd_ra_dec[1])
-	#print(ra)
-	#print(type(ra))
-	ac.track_source(antennas, radec=[Angle(dms_ra).deg, Angle(dms_dec).deg])
-	terminal_text.insert(0.0, "Arrived at RA "+dms_ra+" Dec "+dms_dec+"\n")
-'''
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
