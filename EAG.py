@@ -216,8 +216,8 @@ def show_pic_clicked(ga_min_entry,ga_max_entry,ga_obs_entry):
 	plt.plot(2800, 3850, marker='o', color="white")
 	plt.imshow(milky_way_img) 
 	plt.savefig("galaxy_visibility.png")
-	image = Image.open('galaxy_visibility.png')
-	image.show()
+	image1 = Image.open('galaxy_visibility.png')
+	image1.show()
 
 show_pic_button = customtkinter.CTkButton(master=control_frame, text="Show Galaxy Pic", command=show_pic_clicked(ga_min_entry,ga_max_entry,ga_obs_entry))
 show_pic_button.pack(padx=5, pady=5)
