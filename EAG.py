@@ -167,7 +167,7 @@ def list_avail_targets_clicked():
 '''
 	          
 def track_source_clicked():
-	gl = galactic_longitude_entry.get()
+	gl = int(galactic_longitude_entry.get())
 	radec = ga2equ([gl,0])
 	ra = radec[0]
 	dec = radec[1]
