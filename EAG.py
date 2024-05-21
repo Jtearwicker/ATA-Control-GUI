@@ -19,6 +19,7 @@ from ATATools import ata_control as ac
 from matplotlib import image 
 from matplotlib import pyplot as plt
 from PIL import Image
+import time
 
 # Create the main root
 root = customtkinter.CTk()
