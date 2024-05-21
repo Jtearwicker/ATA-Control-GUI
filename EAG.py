@@ -150,13 +150,36 @@ def list_avail_targets_clicked():
 
 
 
+
+
+
+	          
+def track_source_clicked():
+	gl = int(galactic_longitude_entry.get())
+	dd_radec = ga2equ([gl,0])
+	c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
+	RA = c.ra.hms
+	DEC = c.dec.dms
+	ac.track_source(antennas, radec=[Angle(str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s").hour, Angle(str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s").deg])
+	terminal_text.insert(0.0, "Arrived at RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
+
+
+activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
+activate_antenna_button.pack(padx=5, pady=5)
+
+show_ant_status_button = customtkinter.CTkButton(master=control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
+show_ant_status_button.pack(padx=5, pady=5)
+
+avail_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
+avail_targets_button.pack(padx=5, pady=5)
+
 gl_min_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
 gl_min_entry.pack(padx=5, pady=5)
 
-gl_max_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
+gl_max_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Max")
 gl_max_entry.pack(padx=5, pady=5)
 
-gl_obs_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
+gl_obs_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Obs")
 gl_obs_entry.pack(padx=5, pady=5)
 
 def show_pic_clicked(ga_min_entry,ga_max_entry,ga_obs_entry):
@@ -193,29 +216,8 @@ def show_pic_clicked(ga_min_entry,ga_max_entry,ga_obs_entry):
 	plt.imshow(milky_way_img) 
 	plt.show()
 
-show_pic_button = customtkinter.CTkButton(master=control_frame, text="Show Galaxy Pic", command=show_pic_clicked)
+show_pic_button = customtkinter.CTkButton(master=control_frame, text="Show Galaxy Pic", command=show_pic_clicked(ga_min_entry,ga_max_entry,ga_obs_entry))
 show_pic_button.pack(padx=5, pady=5)
-
-
-	          
-def track_source_clicked():
-	gl = int(galactic_longitude_entry.get())
-	dd_radec = ga2equ([gl,0])
-	c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
-	RA = c.ra.hms
-	DEC = c.dec.dms
-	ac.track_source(antennas, radec=[Angle(str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s").hour, Angle(str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s").deg])
-	terminal_text.insert(0.0, "Arrived at RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
-
-
-activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
-activate_antenna_button.pack(padx=5, pady=5)
-
-show_ant_status_button = customtkinter.CTkButton(master=control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
-show_ant_status_button.pack(padx=5, pady=5)
-
-avail_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
-avail_targets_button.pack(padx=5, pady=5)
 
 galactic_longitude_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude")
 galactic_longitude_entry.pack(padx=5, pady=5)
