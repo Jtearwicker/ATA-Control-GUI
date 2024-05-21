@@ -202,9 +202,9 @@ shut_down_antenna_button.pack(padx=5, pady=5)
 
 def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
 
-    min_pos = ga_min.get()
-    max_pos = ga_max.get()
-    obs_pos = ga_obs.get()
+    min_pos = ga_min_entry.get()
+    max_pos = ga_max_entry.get()
+    obs_pos = ga_obs_entry.get()
     px_min = pxlib[min_pos]
     px_max = pxlib[max_pos]
     px_obs = pxlib[obs_pos]
