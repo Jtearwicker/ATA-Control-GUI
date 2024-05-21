@@ -201,15 +201,15 @@ shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="S
 shut_down_antenna_button.pack(padx=5, pady=5)
 
 def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
-		if(len(ga_min_entry)==0):
+		if(len(ga_min_entry.get())==0):
 			ga_min = 0
 		else:
 			ga_min = ga_min_entry.get()
-		if(len(ga_max_entry)==0):
+		if(len(ga_max_entry.get())==0):
 			ga_max = 0
 		else:	
 			ga_max = ga_max_entry.get()
-		if(len(ga_obs_entry)==0):
+		if(len(ga_obs_entry.get())==0):
 			ga_obs = 0
 		else:
 			ga_obs = ga_obs_entry.get()
