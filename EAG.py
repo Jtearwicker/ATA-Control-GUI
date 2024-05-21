@@ -148,6 +148,16 @@ def list_avail_targets_clicked():
 		if elevation>20:
 			terminal_text.insert(0.0, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+"\n") #+" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
 
+
+def show_pic_clicked():
+	milky_way_img = image.imread("MWimg.jpg")
+	plt.imshow(milky_way_img) 
+	plt.show()
+
+show_pic_button = customtkinter.CTkButton(master=control_frame, text="Show Galaxy Pic", command=show_pic_clicked)
+show_pic_button.pack(padx=5, pady=5)
+
+
 '''
 	ga_min = min(avail_targets_long)
 	ga_max = max(avail_targets_long)
