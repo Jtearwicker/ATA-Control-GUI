@@ -204,16 +204,16 @@ def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
 		if(len(ga_min_entry)==0):
 			ga_min = 0
 		else:
-    	ga_min = ga_min_entry.get()
-    if(len(ga_max_entry)==0):
+			ga_min = ga_min_entry.get()
+		if(len(ga_max_entry)==0):
 			ga_max = 0
 		else:	
-    	ga_max = ga_max_entry.get()
-  	if(len(ga_obs_entry)==0):
+			ga_max = ga_max_entry.get()
+		if(len(ga_obs_entry)==0):
 			ga_obs = 0
 		else:
-    	ga_obs = ga_obs_entry.get()
-    	
+			ga_obs = ga_obs_entry.get()
+
     min_pos = int(float(ga_min))
     max_pos = int(float(ga_max))
     obs_pos = int(float(ga_obs))
