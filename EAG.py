@@ -155,17 +155,17 @@ def list_avail_targets_clicked():
 	vis_min_x = [2800, px_min[0]]
 	vis_min_y = [3850, px_min[1]]
 	vis_max_x = [2800, px_max[0]]
-  vis_max_y = [3850, px_max[1]]
-  milky_way_img = image.imread(MWimg.jpg)
-  plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
-  plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
-  plt.plot(2800, 3850, marker='o', color="white")
-  plt.imshow(data) 
-  #plt.show()
-  vis_image = plt.savefig('vis_image.png')
-  MW_image = customtkinter.CTkImage(light_image = Image.open("vis_image.png"))
+	vis_max_y = [3850, px_max[1]]
+	milky_way_img = image.imread(MWimg.jpg)
+	plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
+	plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
+	plt.plot(2800, 3850, marker='o', color="white")
+	plt.imshow(data) 
+	#plt.show()
+	vis_image = plt.savefig('vis_image.png')
+	MW_image = customtkinter.CTkImage(light_image = Image.open("vis_image.png"))
 
-		          
+	          
 def track_source_clicked():
     ra = ra_entry.get()
     dec = dec_entry.get()
