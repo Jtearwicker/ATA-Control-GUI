@@ -174,6 +174,18 @@ def decdeg2dms(dd):
    degrees = degrees if is_positive else -degrees
    return str(int(degrees))+"d"+str(int(minutes))+"m"+str(int(seconds))+"s"
 
+
+def track_source_clicked():
+	gl = int(galactic_longitude_entry.get())
+	dd_radec = ga2equ([gl,0])
+	c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
+	RA = c.ra.hms
+	DEC = c.dec.dms
+	ac.track_source(antennas, radec=[Angle(dms_ra).deg, Angle(dms_dec).deg])
+	terminal_text.insert(0.0, "Arrived at RA "+dms_ra+" Dec "+dms_dec+"\n")
+
+
+'''
 def track_source_clicked():
 	gl = int(galactic_longitude_entry.get())
 	dd_ra_dec = ga2equ([gl,0])
@@ -183,7 +195,7 @@ def track_source_clicked():
 	#print(type(ra))
 	ac.track_source(antennas, radec=[Angle(dms_ra).deg, Angle(dms_dec).deg])
 	terminal_text.insert(0.0, "Arrived at RA "+dms_ra+" Dec "+dms_dec+"\n")
-
+'''
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
