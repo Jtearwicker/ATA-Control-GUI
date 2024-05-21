@@ -166,15 +166,23 @@ def list_avail_targets_clicked():
 	MW_image = customtkinter.CTkImage(light_image = Image.open("vis_image.png"))
 '''
 	          
+def decdeg2dms(dd):
+   is_positive = dd >= 0
+   dd = abs(dd)
+   minutes,seconds = divmod(dd*3600,60)
+   degrees,minutes = divmod(minutes,60)
+   degrees = degrees if is_positive else -degrees
+   return str(degrees)+"d"+str(minutes)+m+str(seconds)+"s"
+
 def track_source_clicked():
 	gl = int(galactic_longitude_entry.get())
-	ra_dec = ga2equ([gl,0])
-	ra = str(ra_dec[0])
-	dec = str(ra_dec[1])
+	dd_ra_dec = ga2equ([gl,0])
+	dms_ra = decdeg2dms(dd_ra_dec[0])
+	dms_dec = decdeg2dms(dd_ra_dec[1])
 	#print(ra)
 	#print(type(ra))
-	ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
-	terminal_text.insert(0.0, "Arrived at RA "+ra+" Dec "+dec+"\n")
+	ac.track_source(antennas, radec=[Angle(dms_ra).deg, Angle(dms_dec).deg])
+	terminal_text.insert(0.0, "Arrived at RA "+dms_ra+" Dec "+dms_dec+"\n")
 
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
