@@ -173,6 +173,7 @@ show_ant_status_button.pack(padx=5, pady=5)
 avail_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
 
+'''
 ga_min_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
 ga_min_entry.pack(padx=5, pady=5)
 
@@ -182,7 +183,7 @@ ga_max_entry.pack(padx=5, pady=5)
 ga_obs_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Obs")
 ga_obs_entry.pack(padx=5, pady=5)
 
-'''
+
 def show_pic_clicked(ga_min_entry,ga_max_entry,ga_obs_entry):
 	
 	if(len(ga_min_entry.get())==0):
