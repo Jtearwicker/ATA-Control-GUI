@@ -169,14 +169,14 @@ def list_avail_targets_clicked():
 '''
 	          
 def track_source_clicked():
-		gl = galactic_longitude_entry.get()
-		radec = ga2equ([gl,0])
-    ra = radec[0]
-    dec = radec[1]
-    #print(ra)
-    #print(type(ra))
-    ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
-    terminal_text.insert(0.0, "Arrived at RA "+ra+" Dec "+dec+"\n")
+	gl = galactic_longitude_entry.get()
+	radec = ga2equ([gl,0])
+	ra = radec[0]
+	dec = radec[1]
+	#print(ra)
+	#print(type(ra))
+	ac.track_source(antennas, radec=[Angle(ra).deg, Angle(dec).deg])
+	terminal_text.insert(0.0, "Arrived at RA "+ra+" Dec "+dec+"\n")
 
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
