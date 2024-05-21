@@ -214,25 +214,25 @@ def plot_galaxy(ga_min_entry, ga_max_entry, ga_obs_entry):
 		else:
 			ga_obs = ga_obs_entry.get()
 
-    min_pos = int(float(ga_min))
-    max_pos = int(float(ga_max))
-    obs_pos = int(float(ga_obs))
-    px_min = pxlib[min_pos]
-    px_max = pxlib[max_pos]
-    px_obs = pxlib[obs_pos]
-    vis_min_x = [2800, px_min[0]]
-    vis_min_y = [3850, px_min[1]]
-    vis_max_x = [2800, px_max[0]]
-    vis_max_y = [3850, px_max[1]]
-    obs_x = [2800, px_obs[0]]
-    obs_y = [3850, px_obs[1]]
-    milky_way_img = image.imread(MWimg.jpg)
-    plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
-    plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
-    plt.plot(obs_x, obs_y, color="red", linewidth=2)
-    plt.plot(2800, 3850, marker='o', color="white")
-    plt.imshow(data) 
-    plt.show()
+		min_pos = int(float(ga_min))
+		max_pos = int(float(ga_max))
+		obs_pos = int(float(ga_obs))
+		px_min = pxlib[min_pos]
+		px_max = pxlib[max_pos]
+		px_obs = pxlib[obs_pos]
+		vis_min_x = [2800, px_min[0]]
+		vis_min_y = [3850, px_min[1]]
+		vis_max_x = [2800, px_max[0]]
+		vis_max_y = [3850, px_max[1]]
+		obs_x = [2800, px_obs[0]]
+		obs_y = [3850, px_obs[1]]
+		milky_way_img = image.imread(MWimg.jpg)
+		plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
+		plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
+		plt.plot(obs_x, obs_y, color="red", linewidth=2)
+		plt.plot(2800, 3850, marker='o', color="white")
+		plt.imshow(data) 
+		plt.show()
 
 gl_min_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="GL Min")
 gl_min_entry.pack(padx=5, pady=5)
