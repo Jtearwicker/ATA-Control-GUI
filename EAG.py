@@ -134,6 +134,13 @@ pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[5
 									[5300, 2430],[5026, 1936],[4753, 1443],[4480, 950],[3920, 800],[3360, 650]])
 
 avail_targets = []
+data = image.imread("MWimg.jpg")
+ax.imshow(data)
+ax.axis("off")
+#fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
+canvas = FigureCanvasTkAgg(fig, master=image_frame)
+canvas.draw()
+canvas.get_tk_widget().pack()
 
 def list_avail_targets_clicked():
 	for i in range(0,35):
