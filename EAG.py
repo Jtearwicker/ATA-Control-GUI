@@ -34,8 +34,8 @@ control_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
 control_frame.pack()
 
 #Galaxy pointing image frame
-#image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-#image_frame.pack()
+image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
+image_frame.pack()
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
@@ -144,7 +144,8 @@ def list_avail_targets_clicked():
 		elevation = radec2alt(ga2equ(targets[i]))
 
 		if elevation>20:
-			terminal_text.insert(0.0, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n") #+" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
+			terminal_text.insert(0.0, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n")
+			avail_long = targets[i][0]
 
 	ga_min=240
 	ga_max=110
@@ -170,8 +171,8 @@ def list_avail_targets_clicked():
 	ax.plot(2800, 3850, marker='o', color="white")
 	ax.imshow(data) 
 	ax.axis("off")
-	fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
-	canvas = FigureCanvasTkAgg(fig,master=root)
+	#fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
+	canvas = FigureCanvasTkAgg(fig, master=image_frame)
 	canvas.draw()
 	canvas.get_tk_widget().pack()
  
