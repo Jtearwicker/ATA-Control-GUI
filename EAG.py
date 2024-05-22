@@ -63,7 +63,6 @@ def run_server_command(command):
 antennas = ['1a']
 freq = "1420.406"
 def activate_antenna_clicked():
-	#terminal_text.insert(0.0, "Calibrating...\n")
 	run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
 	#run_test_command("/opt/ata-flowgraphs/usrp_test.py")
 	run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
@@ -72,12 +71,12 @@ def activate_antenna_clicked():
 		terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
 	else:
 		ac.move_ant_group(antennas, 'none', 'atagr')
-		#terminal_text.insert(0.0, "You have reserved Antenna 1a!\n")
+		terminal_text.insert(0.0, "Antenna 1a has been reserved.\n")
 	ac.set_freq(freq, antennas, 'd')
 	ac.autotune(antennas)
 	terminal_text.insert(0.0, "Frequency set to 1420.406 MHz and autotuned.\n")
 	terminal_text.insert(0.0, ac.get_ascii_status()[:348]+"\n")
-	time.sleep(40)
+	time.sleep(45)
 	terminal_text.insert(0.0, "Calibration complete!\n")
 
 
