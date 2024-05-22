@@ -56,9 +56,7 @@ def run_reset_command(command):
 	terminal_text.insert(0.0, out)
 
 def run_server_command(command):
-	terminal_text.insert(0.0, "Connecting to server...\n")
 	return os.popen(command)
-	terminal_text.insert(0.0, "Successfully connected to server.\n")
 
 antennas = ['1a']
 freq = "1420.406"
@@ -86,7 +84,6 @@ def show_ant_status_clicked():
 def shut_down_antenna_clicked():
 	run_server_command("pkill -f \"python /home/vgajjar/reu-2023/Hydrogen_line/server.py\"")
 	terminal_text.insert(0.0, "Disconnected from server.\n")
-	terminal_text.insert(0.0, "Parking Antenna 1a...\n")
 	ac.park_antennas(antennas)
 	terminal_text.insert(0.0, "Antenna 1a has been parked.\n")
 	ant_free = str(ac.list_antenna_group('none'))
@@ -156,14 +153,11 @@ def track_source_clicked():
 	RA = c.ra.hms
 	DEC = c.dec.dms
 	ac.track_source(antennas, radec=[Angle(str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s").hour, Angle(str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s").deg])
-	terminal_text.insert(0.0, "Arrived at RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
+	terminal_text.insert(0.0, "Arrived at galactic coordinate "+str(gl)+",0."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
 
 
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
-
-show_ant_status_button = customtkinter.CTkButton(master=control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
-show_ant_status_button.pack(padx=5, pady=5)
 
 avail_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
@@ -223,6 +217,9 @@ galactic_longitude_entry.pack(padx=5, pady=5)
 
 track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
+
+show_ant_status_button = customtkinter.CTkButton(master=control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
+show_ant_status_button.pack(padx=5, pady=5)
 
 shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(padx=5, pady=5)
