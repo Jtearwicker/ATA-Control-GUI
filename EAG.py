@@ -143,6 +143,7 @@ ax.axis("off")
 canvas = FigureCanvasTkAgg(fig, master=image_frame)
 canvas.draw()
 canvas.get_tk_widget().pack()
+ax.close()
 
 def list_avail_targets_clicked():
 	for i in range(0,35):
@@ -156,7 +157,7 @@ def list_avail_targets_clicked():
 			terminal_text.insert(0.0, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n")
 			avail_long = targets[i][0]
 
-	ax.close()
+	
 	ga_min=240
 	ga_max=110
 	ga_obs=180
