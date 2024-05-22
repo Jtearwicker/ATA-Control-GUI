@@ -20,6 +20,7 @@ from matplotlib import image
 from matplotlib import pyplot as plt
 from PIL import Image
 import time
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Create the main root
 root = customtkinter.CTk()
