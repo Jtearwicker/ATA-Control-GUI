@@ -135,6 +135,8 @@ pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[5
 
 avail_targets = []
 data = image.imread("MWimg.jpg")
+fig, ax = plt.subplots()
+fig.set_size_inches(8,4)
 ax.imshow(data)
 ax.axis("off")
 #fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
