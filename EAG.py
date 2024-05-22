@@ -31,18 +31,18 @@ customtkinter.set_appearance_mode("Light")
 
 #Control tabs
 control_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-control_frame.pack()
+control_frame.grid(row=0,column=0)
 
 #Galaxy pointing image frame
 image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-image_frame.pack()
+image_frame.grid(row=0,column=1)
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
-terminal_frame.pack(side=BOTTOM)
+terminal_frame.grid(row=1,column=0)
 # Create a text widget to display the terminal output
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
-terminal_text.pack()
+terminal_text.grid(row=1,column=0)
 
 def run_test_command(command):
 	terminal_text.insert(0.0, "Testing USRPs...\n")
@@ -169,7 +169,7 @@ def list_avail_targets_clicked():
 	ax.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
 	ax.plot(obs_x, obs_y, color="red", linewidth=2)
 	ax.plot(2800, 3850, marker='o', color="white")
-	ax.imshow(data) 
+	ax.imshow(data)
 	ax.axis("off")
 	#fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
 	canvas = FigureCanvasTkAgg(fig, master=image_frame)
