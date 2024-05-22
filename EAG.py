@@ -146,7 +146,7 @@ def list_avail_targets_clicked():
 		elevation = radec2alt(ga2equ(targets[i]))
 
 		if elevation>20:
-			terminal_text.insert(0.0, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+"\n") #+" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
+			terminal_text.insert(0.0, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n") #+" degrees. RA = "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec = "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+".\n")
 
 
 
