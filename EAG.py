@@ -31,18 +31,18 @@ customtkinter.set_appearance_mode("Light")
 
 #Control tabs
 control_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-control_frame.grid(row=0,column=0,sticky=NW)
+control_frame.pack()
 
 #Galaxy pointing image frame
 image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-image_frame.grid(row=0,column=1,sticky=NE)
+image_frame.pack()
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
-terminal_frame.grid(row=1,column=0,sticky=S)
+terminal_frame.pack()
 # Create a text widget to display the terminal output
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
-terminal_text.grid()
+terminal_text.pack()
 
 def run_test_command(command):
 	terminal_text.insert(0.0, "Testing USRPs...\n")
@@ -159,7 +159,7 @@ def list_avail_targets_clicked():
 			terminal_text.insert(0.0, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n")
 			avail_long = targets[i][0]
 
-	
+	'''
 	ga_min=240
 	ga_max=110
 	ga_obs=180
@@ -188,6 +188,7 @@ def list_avail_targets_clicked():
 	canvas = FigureCanvasTkAgg(fig, master=image_frame)
 	canvas.draw()
 	canvas.get_tk_widget().pack()
+	'''
  
 def track_source_clicked():
 	gl = int(galactic_longitude_entry.get())
