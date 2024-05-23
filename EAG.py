@@ -31,18 +31,18 @@ customtkinter.set_appearance_mode("Light")
 
 #Control tabs
 control_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-control_frame.pack(side=TOP, anchor=NW)
+control_frame.pack(anchor=NW)
 
 #Galaxy pointing image frame
 image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-image_frame.pack(side=TOP, anchor=NE)
+image_frame.pack(anchor=NE)
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
 terminal_frame.pack(side=BOTTOM)
 # Create a text widget to display the terminal output
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
-terminal_text.pack(side=BOTTOM)
+terminal_text.pack()
 
 def run_test_command(command):
 	terminal_text.insert(0.0, "Testing USRPs...\n")
