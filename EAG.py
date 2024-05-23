@@ -34,8 +34,8 @@ control_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
 control_frame.pack()
 
 #Galaxy pointing image frame
-image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-image_frame.pack()
+#image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
+#image_frame.pack()
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
