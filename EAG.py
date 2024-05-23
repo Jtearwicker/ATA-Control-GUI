@@ -164,7 +164,6 @@ def list_avail_targets_clicked():
 	ga_max=110
 	ga_obs=180
 	fig, ax = plt.subplots()
-	ax.close()
 	fig.set_size_inches(8,4)
 	min_pos = int(ga_min/10)
 	max_pos = int(ga_max/10)
