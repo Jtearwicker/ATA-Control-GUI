@@ -39,7 +39,7 @@ image_frame.pack(anchor=NE)
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
-terminal_frame.pack(side=BOTTOM)
+terminal_frame.pack(anchor=S)
 # Create a text widget to display the terminal output
 terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
 terminal_text.pack()
