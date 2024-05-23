@@ -142,7 +142,7 @@ ax.axis("off")
 #fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
 canvas = FigureCanvasTkAgg(fig, master=image_frame)
 canvas.draw()
-canvas.get_tk_widget().pack()
+canvas.get_tk_widget().pack(side=TOP, anchor=NE)
 
 def list_avail_targets_clicked():
 	for i in range(0,35):
