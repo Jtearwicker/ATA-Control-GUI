@@ -31,11 +31,11 @@ customtkinter.set_appearance_mode("Light")
 
 #Control tabs
 control_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-control_frame.pack(side=LEFT)
+control_frame.pack(side=TOP, anchor=NW)
 
 #Galaxy pointing image frame
 image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-image_frame.pack(side=RIGHT)
+image_frame.pack(side=TOP, anchor=NE)
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
