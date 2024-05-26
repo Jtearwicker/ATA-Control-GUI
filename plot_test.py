@@ -48,7 +48,7 @@ terminal_frame.pack(side=BOTTOM, fill=BOTH, expand=True, padx=10, pady=10)
 terminal_text = customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
 terminal_text.pack(fill=BOTH, expand=True)
 
-# Load the image without resizing
+# Load and resize the image
 image_path = "MWimg.jpg"
 img = Image.open(image_path)
 img_tk = ImageTk.PhotoImage(img)
@@ -130,63 +130,38 @@ def radec2alt(ga):
 
 targets = [[45,0],[50,0],[55,0],[60,0],[65,0],[70,0],[75,0],[80,0],[85,0],[90,0],[95,0],[100,0],[105,0],[110,0],[115,0],[120,0],[125,0],[130,0],[135,0],[140,0],[145,0],[150,0],[155,0],[160,0],[165,0],[170,0],[175,0],[180,0],[185,0],[190,0],[195,0],[200,0],[205,0],[210,0],[215,0]]
 
-pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[566, 1936],[300, 2430],
-                  [350, 2903],[400, 3376],[450, 3850],[733, 4140],[1016, 4430],[1300, 4720],[1550, 4846],
-                  [1800, 4973],[2050, 5100],[2300, 5140],[2550, 5180],[2800, 5220],[3033, 5180],[3266, 5140],
-                  [3500, 5100],[3766, 4973],[4033, 4846],[4300, 4720],[4583, 4430],[4866, 4140],[5150, 3850],
-                  [5200, 3376],[5250, 2903],[5300, 2430],[5026, 1936],[4753, 1443],[4480, 950],[3920, 800],[3360, 650]])
-
-def plot_galaxy(ga_min, ga_max, ga_obs):
-    min_pos = int(ga_min / 10)
-    max_pos = int(ga_max / 10)
-    obs_pos = int(ga_obs / 10)
-    px_min = pxlib[min_pos]
-    px_max = pxlib[max_pos]
-    px_obs = pxlib[obs_pos]
-    vis_min_x = [2800, px_min[0]]
-    vis_min_y = [3850, px_min[1]]
-    vis_max_x = [2800, px_max[0]]
-    vis_max_y = [3850, px_max[1]]
-    obs_x = [2800, px_obs[0]]
-    obs_y = [3850, px_obs[1]]
-    data = image.imread(image_path)
-    plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
-    plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
-    plt.plot(obs_x, obs_y, color="red", linewidth=2)
-    plt.plot(2800, 3850, marker='o', color="white")
-    plt.imshow(data)
-    plt.axis('off')
-    plt.show()
-
 def list_avail_targets_clicked():
-    available_targets = []
-    for target in targets:
-        altitude = radec2alt(target)
-        if altitude > 20:
-            available_targets.append(target[0])
-    if not available_targets:
-        terminal_text.insert(END, "No targets are above 20 degrees.\n")
-    else:
-        terminal_text.insert(END, f"Targets above 20 degrees: {available_targets}\n")
-        plot_galaxy(min(available_targets), max(available_targets), 50)  # Assuming 50 as an example observer position
+    for i in range(0, 35):
+        dd_radec = ga2equ(targets[i])
+        c = SkyCoord(ra=dd_radec[0] * u.deg, dec=dd_radec[1] * u.deg)
+        RA = c.ra.hms
+        DEC = c.dec.dms
+        elevation = radec2alt(ga2equ(targets[i]))
 
-# Add buttons and entry fields to the control frame
-list_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
-list_targets_button.pack(padx=5, pady=5)
+        if elevation > 20:
+            terminal_text.insert(END, "Galactic longitude " + str(targets[i][0]) + " has an elevation of " + str(elevation)[0:4] + " degrees above the horizon.\n")
+            avail_long = targets[i][0]
 
-test_usrp_button = customtkinter.CTkButton(master=control_frame, text="Test USRPs", command=lambda: run_test_command("uhd_find_devices"))
-test_usrp_button.pack(padx=5, pady=5)
-
-reset_usrp_button = customtkinter.CTkButton(master=control_frame, text="Reset USRPs", command=lambda: run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py"))
-reset_usrp_button.pack(padx=5, pady=5)
+def track_source_clicked():
+    gl = int(galactic_longitude_entry.get())
+    dd_radec = ga2equ([gl, 0])
+    c = SkyCoord(ra=dd_radec[0] * u.deg, dec=dd_radec[1] * u.deg)
+    RA = c.ra.hms
+    DEC = c.dec.dms
+    ac.track_source(antennas, radec=[Angle(str(int(RA[0])) + "h" + str(int(RA[1])) + "m" + str(int(RA[2])) + "s").hour,
+                                     Angle(str(int(DEC[0])) + "d" + str(int(abs(DEC[1]))) + "m" + str(int(abs(DEC[2]))) + "s").deg])
+    terminal_text.insert(END, "Arrived at galactic coordinate (" + str(gl) + ",0). RA " + str(int(RA[0])) + "h" + str(int(RA[1])) + "m" + str(int(RA[2])) + "s Dec " + str(int(DEC[0])) + "d" + str(int(abs(DEC[1]))) + "m" + str(int(abs(DEC[2]))) + "s\n")
 
 activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
+avail_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
+avail_targets_button.pack(padx=5, pady=5)
+
 galactic_longitude_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude")
 galactic_longitude_entry.pack(padx=5, pady=5)
 
-track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", command=activate_antenna_clicked)
+track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
 
 show_ant_status_button = customtkinter.CTkButton(master=control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
