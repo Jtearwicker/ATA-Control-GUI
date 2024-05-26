@@ -51,6 +51,7 @@ terminal_text.pack(fill=BOTH, expand=True)
 # Load and resize the image
 image_path = "MWimg.jpg"
 img = Image.open(image_path)
+img=img.resize((560, 560))
 img_tk = ImageTk.PhotoImage(img)
 
 # Label to display the image
