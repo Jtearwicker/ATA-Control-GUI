@@ -137,16 +137,16 @@ pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[5
                                     [5300, 2430],[5026, 1936],[4753, 1443],[4480, 950],[3920, 800],[3360, 650]])
 
 def list_avail_targets_clicked():
-    for i in range(0, 35):
+    for i in range(0,35):
         dd_radec = ga2equ(targets[i])
-        c = SkyCoord(ra=dd_radec[0] * u.deg, dec=dd_radec[1] * u.deg)
+        c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
         RA = c.ra.hms
         DEC = c.dec.dms
         elevation = radec2alt(ga2equ(targets[i]))
 
-        if elevation > 20:
-            terminal_text.insert(END, "Galactic longitude " + str(targets[i][0]) + " has an elevation of " + str(elevation)[0:4] + " degrees above the horizon.\n")
-            avail_long = targets[i][0]
+        if elevation>20:
+            terminal_text.insert(END, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n")
+            #avail_long = targets[i][0]
 
 def track_source_clicked():
     gl = int(galactic_longitude_entry.get())
