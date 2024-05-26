@@ -9,7 +9,6 @@ import astropy.units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord, Angle
 from astropy.time import Time
 from math import *
-import numpy as np
 import pyautogui
 from tkinterweb import HtmlFrame
 import datetime
@@ -30,18 +29,18 @@ customtkinter.set_appearance_mode("Light")
 
 # Control tabs
 control_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-control_frame.pack()
+control_frame.pack(side=TOP, pady=10)
 
 # Galaxy pointing image frame
 image_frame = customtkinter.CTkFrame(master=root, height=350, width=600)
-image_frame.pack()
+image_frame.pack(side=TOP, pady=10)
 
 # Create a frame for the terminal output
 terminal_frame = customtkinter.CTkFrame(master=root)
-terminal_frame.pack()
+terminal_frame.pack(side=TOP, pady=10)
 
 # Create a text widget to display the terminal output
-terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
+terminal_text = customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
 terminal_text.pack()
 
 # Load the image
@@ -58,16 +57,16 @@ def update_image():
     image_label.image = photo
 
 def run_test_command(command):
-    terminal_text.insert(0.0, "Testing USRPs...\n")
+    terminal_text.insert("0.0", "Testing USRPs...\n")
     stream = os.popen(command)
     out = stream.read()
-    terminal_text.insert(0.0, out)
+    terminal_text.insert("0.0", out)
 
 def run_reset_command(command):
-    terminal_text.insert(0.0, "Resetting USRPs clocking...\n")
+    terminal_text.insert("0.0", "Resetting USRPs clocking...\n")
     stream = os.popen(command)
     out = stream.read()
-    terminal_text.insert(0.0, out)
+    terminal_text.insert("0.0", out)
 
 def run_server_command(command):
     return os.popen(command)
@@ -79,31 +78,31 @@ def activate_antenna_clicked():
     run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
     ant_free = str(ac.list_antenna_group('none'))
     if ant_free.find('1a') == -1:
-        terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
+        terminal_text.insert("0.0", "WARNING: Antenna 1a has already been reserved.\n")
     else:
         ac.move_ant_group(antennas, 'none', 'atagr')
-        terminal_text.insert(0.0, "Antenna 1a has been reserved.\n")
+        terminal_text.insert("0.0", "Antenna 1a has been reserved.\n")
     ac.set_freq(freq, antennas, 'd')
     ac.autotune(antennas)
-    terminal_text.insert(0.0, "Frequency set to 1420.406 MHz and autotuned.\n")
-    terminal_text.insert(0.0, ac.get_ascii_status()[:348]+"\n")
+    terminal_text.insert("0.0", "Frequency set to 1420.406 MHz and autotuned.\n")
+    terminal_text.insert("0.0", ac.get_ascii_status()[:348] + "\n")
     time.sleep(45)
-    terminal_text.insert(0.0, "Calibration complete!\n")
+    terminal_text.insert("0.0", "Calibration complete!\n")
 
 def show_ant_status_clicked():
-    terminal_text.insert(0.0, ac.get_ascii_status()[:348]+"\n")
+    terminal_text.insert("0.0", ac.get_ascii_status()[:348] + "\n")
 
 def shut_down_antenna_clicked():
     run_server_command("pkill -f \"python /home/vgajjar/reu-2023/Hydrogen_line/server.py\"")
-    terminal_text.insert(0.0, "Disconnected from server.\n")
+    terminal_text.insert("0.0", "Disconnected from server.\n")
     ac.park_antennas(antennas)
-    terminal_text.insert(0.0, "Antenna 1a has been parked.\n")
+    terminal_text.insert("0.0", "Antenna 1a has been parked.\n")
     ant_free = str(ac.list_antenna_group('none'))
     if ant_free.find('1a') != -1:
-        terminal_text.insert(0.0, "Antenna 1a has already been released\n")
+        terminal_text.insert("0.0", "Antenna 1a has already been released\n")
     else:
         ac.move_ant_group(antennas, 'atagr', 'none')
-        terminal_text.insert(0.0, "Antenna 1a has been released.\n")
+        terminal_text.insert("0.0", "Antenna 1a has been released.\n")
 
 # Target availability calculator
 targets = [[0,0],[10,0],[20,0],[30,0],[40,0],[50,0],[60,0],[70,0],[80,0],
@@ -144,13 +143,13 @@ avail_targets = []
 def list_avail_targets_clicked():
     global avail_targets
     avail_targets = []
-    for i in range(0,35):
+    for i in range(0, 35):
         dd_radec = ga2equ(targets[i])
-        c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
+        c = SkyCoord(ra=dd_radec[0]*u.deg, dec=dd_radec[1]*u.deg)
         elevation = radec2alt(ga2equ(targets[i]))
 
         if elevation > 20:
-            terminal_text.insert(0.0, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n")
+            terminal_text.insert("0.0", f"Galactic longitude {targets[i][0]} has an elevation of {elevation:.2f} degrees above the horizon.\n")
             avail_targets.append(targets[i][0])
 
     # Example visualization of available targets
@@ -189,6 +188,10 @@ list_avail_targets_button.grid(row=1, column=0, padx=5, pady=5)
 
 track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", command=track_source_clicked)
 track_source_button.grid(row=1, column=1, padx=5, pady=5)
+
+# Entry for Galactic coordinates
+coordinate_entry = customtkinter.CTkEntry(master=control_frame, width=200, placeholder_text="Enter Galactic Coordinate")
+coordinate_entry.grid(row=1, column=2, padx=5, pady=5)
 
 # Run the Tkinter main loop
 root.mainloop()
