@@ -108,25 +108,22 @@ def shut_down_antenna_clicked():
         terminal_text.insert(END, "Antenna 1a has been released.\n")
 
 def ga2equ(ga):
-    g1 = radians(ga[0])
-    g2 = radians(ga[1])
-    c1 = radians(192.85948)
-    c2 = radians(27.12825)
-    c3 = radians(32.93192)
-    a = degrees(atan2((cos(g2) * cos(g1 - c3)), (sin(g2) * cos(c2) - cos(g2) * sin(c2) * sin(g1 - c3))) + c1)
-    b = degrees(asin(cos(g2) * cos(c2) * sin(g1 - c3) + sin(g2) * sin(c2)))
-    if a >= 360:
-        a -= 360
-    return [a, b]
+    #Input: [l,b] in decimal degrees
+    #Returns: [ra,dec] in decimal degrees
+    l = radians(ga[0])
+    b = radians(ga[1])
+    # North galactic pole (J2000)
+    pole_ra = radians(192.859508)
+    pole_dec = radians(27.128336)
+    posangle = radians(122.932-90.0)   
+    ra = atan2( (cos(b)*cos(l-posangle)), (sin(b)*cos(pole_dec) - cos(b)*sin(pole_dec)*sin(l-posangle)) ) + pole_ra
+    dec = asin( cos(b)*cos(pole_dec)*sin(l-posangle) + sin(b)*sin(pole_dec) )
+    return np.array([degrees(ra), degrees(dec)])
 
-def radec2alt(ga):
-    ga = [ga[0], ga[1]]
-    ga = ga2equ(ga)
-    ata = EarthLocation(lat=40.8175 * u.deg, lon=-121.469 * u.deg, height=1007 * u.m)
-    delta = 0 * u.m
-    altaz = AltAz(location=ata, obstime=Time(datetime.datetime.now(), scale='utc'))
-    radec = SkyCoord(ra=ga[0] * u.deg, dec=ga[1] * u.deg)
-    altitude = radec.transform_to(altaz).alt.deg
+def radec2alt(RADEC):
+    coord = SkyCoord(RADEC[0] * u.deg, RADEC[1] * u.deg)
+    aa = coord.transform_to(alt_az)
+    altitude = aa.alt.value
     return altitude
 
 targets = [[0,0],[10,0],[20,0],[30,0],[40,0],[50,0],[60,0],[70,0],[80,0],
