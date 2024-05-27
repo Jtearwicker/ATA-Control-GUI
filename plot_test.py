@@ -141,6 +141,7 @@ pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[5
 
 def list_avail_targets_clicked():
     for i in range(0,35):
+        terminal_text.insert(END, targets[i])
         dd_radec = ga2equ(targets[i])
         c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
         RA = c.ra.hms
