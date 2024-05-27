@@ -129,7 +129,7 @@ def radec2alt(ga):
     altitude = radec.transform_to(altaz).alt.deg
     return altitude
 
-targets=np.array([])
+targets=np.empty(35)
 for i in range(0,35):
     targets[i]=[i*10, 0]
 
