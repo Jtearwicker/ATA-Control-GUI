@@ -134,6 +134,13 @@ targets = [[0,0],[10,0],[20,0],[30,0],[40,0],[50,0],[60,0],[70,0],[80,0],
 [180,0],[190,0],[200,0],[210,0],[220,0],[230,0],[240,0],[250,0],[260,0],
 [270,0],[280,0],[290,0],[300,0],[310,0],[320,0],[340,0],[350,0]]
 
+ATA_location = EarthLocation(lat=40.817 * u.deg, lon=-121.47 * u.deg, height=3235 * u.m)
+utc = pytz.timezone('UTC')
+now = utc.localize(datetime.datetime.utcnow())
+la = pytz.timezone('America/Los_Angeles')
+obs_time = now.astimezone(la)
+alt_az = AltAz(location=ATA_location, obstime=obs_time)
+
 pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[566, 1936],[300, 2430],[350, 2903],[400, 3376],[450, 3850],
                                     [733, 4140],[1016, 4430],[1300, 4720],[1550, 4846],[1800, 4973],[2050, 5100],[2300, 5140],[2550, 5180],[2800, 5220],[3033, 5180],
                                     [3266, 5140],[3500, 5100],[3766, 4973],[4033, 4846],[4300, 4720],[4583, 4430],[4866, 4140],[5150, 3850],[5200, 3376],[5250, 2903],
@@ -141,7 +148,7 @@ pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[5
 
 def list_avail_targets_clicked():
     for i in range(0,35):
-        terminal_text.insert(END, targets[i])
+        #terminal_text.insert(END, targets[i])
         dd_radec = ga2equ(targets[i])
         c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
         RA = c.ra.hms
