@@ -183,22 +183,17 @@ def list_avail_targets_clicked():
     return avail_long
 
 # Restore original buttons and galactic longitude entry
-test_usrp_button = Button(control_frame, text="Test USRP", command=lambda: run_test_command("uhd_find_devices"))
-test_usrp_button.pack(pady=10)
 
-reset_usrp_button = Button(control_frame, text="Reset USRP", command=lambda: run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py"))
-reset_usrp_button.pack(pady=10)
-
-activate_antenna_button = Button(control_frame, text="Activate Antenna", command=activate_antenna_clicked)
+activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(pady=10)
 
-antenna_status_button = Button(control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
+antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
 antenna_status_button.pack(pady=10)
 
-shut_down_antenna_button = Button(control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
+shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(pady=10)
 
-avail_targets_button = Button(control_frame, text="List Available Targets", command=list_avail_targets_clicked)
+avail_targets_button = customtkinter.CTkButton(control_frame, text="List Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(pady=10)
 
 gal_long_label = Label(control_frame, text="Enter Galactic Longitude:")
