@@ -168,12 +168,10 @@ def list_avail_targets_clicked():
         draw = ImageDraw.Draw(img)
         
         # Draw the visible wedge
-        draw.line([(vis_min_x, vis_min_y), (min_pix[0], min_pix[1])], fill="red", width=2)
-        draw.line([(vis_min_x, vis_min_y), (max_pix[0], max_pix[1])], fill="red", width=2)
+        draw.line([(vis_min_x, vis_min_y), (min_pix[0], min_pix[1])], fill="white", width=2)
+        draw.line([(vis_min_x, vis_min_y), (max_pix[0], max_pix[1])], fill="white", width=2)
         
         # Draw the target points
-        draw.ellipse((min_pix[0] - 5, min_pix[1] - 5, min_pix[0] + 5, min_pix[1] + 5), fill="blue")
-        draw.ellipse((max_pix[0] - 5, max_pix[1] - 5, max_pix[0] + 5, max_pix[1] + 5), fill="blue")
         
         # Update the image with the new drawings
         img_tk = ImageTk.PhotoImage(img)
@@ -188,6 +186,23 @@ def track_source_clicked():
     c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
     RA = c.ra.hms
     DEC = c.dec.dms
+
+    obs_long = gl
+    obs_pix = pxlib[obs_long // 10] // 14
+    vis_min_x = 2800 // 14
+    vis_min_y = 3850 // 14
+
+    draw = ImageDraw.Draw(img)    
+    # Draw the visible wedge
+    draw.line([(vis_min_x, vis_min_y), (obs_pix[0], obs_pix[1])], fill="red", width=2)
+    
+    # Update the image with the new drawings
+    img_tk = ImageTk.PhotoImage(img)
+    image_label.config(image=img_tk)
+    image_label.image = img_tk
+
+
+
     ac.track_source(antennas, radec=[Angle(str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s").hour, Angle(str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s").deg])
     terminal_text.insert(0.0, "Arrived at galactic coordinate ("+str(gl)+",0)."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
 
