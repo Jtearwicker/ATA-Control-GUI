@@ -183,7 +183,7 @@ def list_avail_targets_clicked():
 
 
 def track_source_clicked():
-    gl = int(galactic_longitude_entry.get())
+    gl = int(gal_long_entry.get())
     dd_radec = ga2equ([gl,0])
     c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
     RA = c.ra.hms
