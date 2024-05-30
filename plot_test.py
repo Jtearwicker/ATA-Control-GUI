@@ -142,7 +142,7 @@ pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[5
                                     [733, 4140],[1016, 4430],[1300, 4720],[1550, 4846],[1800, 4973],[2050, 5100],[2300, 5140],[2550, 5180],[2800, 5220],[3033, 5180],
                                     [3266, 5140],[3500, 5100],[3766, 4973],[4033, 4846],[4300, 4720],[4583, 4430],[4866, 4140],[5150, 3850],[5200, 3376],[5250, 2903],
                                     [5300, 2430],[5026, 1936],[4753, 1443],[4480, 950],[3920, 800],[3360, 650]])
-
+avail_long = []
 def list_avail_targets_clicked():
     for i in range(0,35):
         #terminal_text.insert(END, targets[i])
@@ -154,7 +154,7 @@ def list_avail_targets_clicked():
 
         if elevation>20:
             terminal_text.insert(END, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n")
-            avail_long = targets[i][0]
+            avail_long[j] = targets[i][0]
 
     min_long = avail_long[0]
     max_long = avail_long[-1]
