@@ -27,24 +27,25 @@ root.title("Easy ATA GUI")
 root.geometry("1200x800")
 
 # Create the main frame
-main_frame = Frame(root)
+main_frame = customtkinter.CTkFrame(master=root)
 main_frame.pack(fill=BOTH, expand=True)
 
 # Control frame on the left
-control_frame = Frame(main_frame, width=300)
+control_frame = customtkinter.CTkFrame(master=main_frame, height=350, width=600)
 control_frame.pack(side=LEFT, fill=Y, padx=10, pady=10)
 
 # Image frame on the right
-image_frame = Frame(main_frame, width=900, height=400)
+image_frame = customtkinter.CTkFrame(master=main_frame, height=350, width=600)
 image_frame.pack(side=TOP, fill=BOTH, expand=True, padx=10, pady=10)
 
 # Terminal frame at the bottom
-terminal_frame = Frame(main_frame)
+terminal_frame = customtkinter.CTkFrame(master=main_frame)
 terminal_frame.pack(side=BOTTOM, fill=BOTH, expand=True, padx=10, pady=10)
 
 # Create a text widget to display the terminal output
-terminal_text = Text(terminal_frame, height=10, font=("DejaVu Sans Mono", 12))
+terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
 terminal_text.pack(fill=BOTH, expand=True)
+
 
 # Load and resize the image
 image_path = "MWimg.jpg"
@@ -194,10 +195,10 @@ def track_source_clicked():
 # Restore original buttons and galactic longitude entry
 
 activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", command=activate_antenna_clicked)
-activate_antenna_button.pack(pady=10)
+activate_antenna_button.pack(padx=5, pady=5)
 
-avail_targets_button = customtkinter.CTkButton(control_frame, text="List Available Targets", command=list_avail_targets_clicked)
-avail_targets_button.pack(pady=10)
+avail_targets_button = customtkinter.CTkButton(control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
+avail_targets_button.pack(padx=5, pady=5)
 
 gal_long_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude")
 gal_long_entry.pack(padx=5, pady=5)
@@ -206,10 +207,10 @@ track_source_button = customtkinter.CTkButton(master=control_frame, text="Track 
 track_source_button.pack(padx=5, pady=5)
 
 antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
-antenna_status_button.pack(pady=10)
+antenna_status_button.pack(padx=5, pady=5)
 
 shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
-shut_down_antenna_button.pack(pady=10)
+shut_down_antenna_button.pack(padx=5, pady=5)
 
 # Start the GUI
 root.mainloop()
