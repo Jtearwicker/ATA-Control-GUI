@@ -9,7 +9,6 @@ import astropy.units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord, Angle
 from astropy.time import Time
 from math import *
-import numpy as np
 import pyautogui
 from tkinterweb import HtmlFrame
 import datetime
@@ -18,7 +17,7 @@ import pytz
 from ATATools import ata_control as ac
 from matplotlib import image 
 from matplotlib import pyplot as plt
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
 import time
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -51,7 +50,7 @@ terminal_text.pack(fill=BOTH, expand=True)
 # Load and resize the image
 image_path = "MWimg.jpg"
 img = Image.open(image_path)
-img=img.resize((400, 400))
+img = img.resize((400, 400))
 img_tk = ImageTk.PhotoImage(img)
 
 # Label to display the image
@@ -142,64 +141,65 @@ pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[5
                                     [733, 4140],[1016, 4430],[1300, 4720],[1550, 4846],[1800, 4973],[2050, 5100],[2300, 5140],[2550, 5180],[2800, 5220],[3033, 5180],
                                     [3266, 5140],[3500, 5100],[3766, 4973],[4033, 4846],[4300, 4720],[4583, 4430],[4866, 4140],[5150, 3850],[5200, 3376],[5250, 2903],
                                     [5300, 2430],[5026, 1936],[4753, 1443],[4480, 950],[3920, 800],[3360, 650]])
+
 avail_long = []
 def list_avail_targets_clicked():
-    for i in range(0,35):
-        #terminal_text.insert(END, targets[i])
+    global avail_long, img_tk, img
+    avail_long = []  # Reset the list each time the button is clicked
+    for i in range(0, 35):
         dd_radec = ga2equ(targets[i])
-        c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
-        RA = c.ra.hms
-        DEC = c.dec.dms
+        c = SkyCoord(ra=dd_radec[0] * u.deg, dec=dd_radec[1] * u.deg)
         elevation = radec2alt(ga2equ(targets[i]))
+        
+        if elevation > 20:
+            terminal_text.insert(END, "Galactic longitude " + str(targets[i][0]) + " has an elevation of " + str(elevation)[:4] + " degrees above the horizon.\n")
+            avail_long.append(targets[i][0])
+    
+    if avail_long:
+        min_long = avail_long[0]
+        max_long = avail_long[-1]
+        min_pix = pxlib[min_long // 10] // 14
+        max_pix = pxlib[max_long // 10] // 14
+        
+        vis_min_x = 2800 // 14
+        vis_min_y = 3850 // 14
+        vis_max_x = max_pix[0]
+        vis_max_y = max_pix[1]
+        
+        # Create a drawing context on the image
+        draw = ImageDraw.Draw(img)
+        
+        # Draw the visible wedge
+        draw.line([(vis_min_x, vis_min_y), (vis_max_x, vis_max_y)], fill="red", width=2)
+        
+        # Draw the target point
+        draw.ellipse((min_pix[0] - 5, min_pix[1] - 5, min_pix[0] + 5, min_pix[1] + 5), fill="blue")
+        
+        # Update the image with the new drawings
+        img_tk = ImageTk.PhotoImage(img)
+        image_label.config(image=img_tk)
+        image_label.image = img_tk
+    
+    terminal_text.insert(END, "These are the available Galactic longitudes: " + str(avail_long) + "\n")
+    return avail_long
 
-        if elevation>20:
-            terminal_text.insert(END, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n")
-            avail_long[j] = targets[i][0]
+test_usrp_button = customtkinter.CTkButton(control_frame, text="Test USRP", command=lambda: run_test_command("uhd_find_devices"))
+test_usrp_button.pack(pady=10)
 
-    min_long = avail_long[0]
-    max_long = avail_long[-1]
-    min_pix = pxlib[min_long/10]/14
-    max_pix = pxlib[max_long/10]/14
-    vis_min_x = [2800, min_pix[0]]/14
-    vis_min_y = [3850, min_pix[1]]/14
-    vis_max_x = [2800, max_pix[0]]/14
-    vis_max_y = [3850, max_pix[1]]/14
-    plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
-    plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
-    plt.plot(2800, 3850, marker='o', color="white")
-    plt.savefig("VisibilityPlot.png")
-    image_path = "VisibilityPlot.png"
-    img = Image.open(image_path)
-    img=img.resize((400, 400))
-    img_tk = ImageTk.PhotoImage(img)
+reset_usrp_button = customtkinter.CTkButton(control_frame, text="Reset USRP", command=lambda: run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py"))
+reset_usrp_button.pack(pady=10)
 
+activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", command=activate_antenna_clicked)
+activate_antenna_button.pack(pady=10)
 
-def track_source_clicked():
-    gl = int(galactic_longitude_entry.get())
-    dd_radec = ga2equ([gl, 0])
-    c = SkyCoord(ra=dd_radec[0] * u.deg, dec=dd_radec[1] * u.deg)
-    RA = c.ra.hms
-    DEC = c.dec.dms
-    ac.track_source(antennas, radec=[Angle(str(int(RA[0])) + "h" + str(int(RA[1])) + "m" + str(int(RA[2])) + "s").hour,
-                                     Angle(str(int(DEC[0])) + "d" + str(int(abs(DEC[1]))) + "m" + str(int(abs(DEC[2]))) + "s").deg])
-    terminal_text.insert(END, "Arrived at galactic coordinate (" + str(gl) + ",0). RA " + str(int(RA[0])) + "h" + str(int(RA[1])) + "m" + str(int(RA[2])) + "s Dec " + str(int(DEC[0])) + "d" + str(int(abs(DEC[1]))) + "m" + str(int(abs(DEC[2]))) + "s\n")
+antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
+antenna_status_button.pack(pady=10)
 
-activate_antenna_button = customtkinter.CTkButton(master=control_frame, text="Activate Antenna", command=activate_antenna_clicked)
-activate_antenna_button.pack(padx=5, pady=5)
+shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
+shut_down_antenna_button.pack(pady=10)
 
-avail_targets_button = customtkinter.CTkButton(master=control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
-avail_targets_button.pack(padx=5, pady=5)
+avail_targets_button = customtkinter.CTkButton(control_frame, text="List Available Targets", command=list_avail_targets_clicked)
+avail_targets_button.pack(pady=10)
 
-galactic_longitude_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude")
-galactic_longitude_entry.pack(padx=5, pady=5)
-
-track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", command=track_source_clicked)
-track_source_button.pack(padx=5, pady=5)
-
-show_ant_status_button = customtkinter.CTkButton(master=control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
-show_ant_status_button.pack(padx=5, pady=5)
-
-shut_down_antenna_button = customtkinter.CTkButton(master=control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
-shut_down_antenna_button.pack(padx=5, pady=5)
-
+# Start the GUI
 root.mainloop()
