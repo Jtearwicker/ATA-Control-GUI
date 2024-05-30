@@ -154,7 +154,25 @@ def list_avail_targets_clicked():
 
         if elevation>20:
             terminal_text.insert(END, "Galactic longitude "+str(targets[i][0])+" has an elevation of "+str(elevation)[0:4]+" degrees above the horizon.\n")
-            #avail_long = targets[i][0]
+            avail_long = targets[i][0]
+
+    min_long = avail_long[0]
+    max_long = avail_long[-1]
+    min_pix = pxlib[min_long/10]/14
+    max_pix = pxlib[max_long/10]/14
+    vis_min_x = [2800, min_pix[0]]/14
+    vis_min_y = [3850, min_pix[1]]/14
+    vis_max_x = [2800, max_pix[0]]/14
+    vis_max_y = [3850, max_pix[1]]/14
+    plt.plot(vis_min_x, vis_min_y, color="white", linewidth=2)
+    plt.plot(vis_max_x, vis_max_y, color="white", linewidth=2)
+    plt.plot(2800, 3850, marker='o', color="white")
+    plt.savefig("VisibilityPlot.png")
+    image_path = "VisibilityPlot.png"
+    img = Image.open(image_path)
+    img=img.resize((400, 400))
+    img_tk = ImageTk.PhotoImage(img)
+
 
 def track_source_clicked():
     gl = int(galactic_longitude_entry.get())
