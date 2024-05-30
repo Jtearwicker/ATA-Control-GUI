@@ -178,29 +178,38 @@ def list_avail_targets_clicked():
         img_tk = ImageTk.PhotoImage(img)
         image_label.config(image=img_tk)
         image_label.image = img_tk
-    
-    terminal_text.insert(END, "These are the available Galactic longitudes: " + str(avail_long) + "\n")
     return avail_long
+
+
+def track_source_clicked():
+    gl = int(galactic_longitude_entry.get())
+    dd_radec = ga2equ([gl,0])
+    c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
+    RA = c.ra.hms
+    DEC = c.dec.dms
+    ac.track_source(antennas, radec=[Angle(str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s").hour, Angle(str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s").deg])
+    terminal_text.insert(0.0, "Arrived at galactic coordinate ("+str(gl)+",0)."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
+
 
 # Restore original buttons and galactic longitude entry
 
 activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(pady=10)
 
+avail_targets_button = customtkinter.CTkButton(control_frame, text="List Available Targets", command=list_avail_targets_clicked)
+avail_targets_button.pack(pady=10)
+
+gal_long_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude")
+gal_long_entry.pack(padx=5, pady=5)
+
+track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", command=track_source_clicked)
+track_source_button.pack(padx=5, pady=5)
+
 antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
 antenna_status_button.pack(pady=10)
 
 shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(pady=10)
-
-avail_targets_button = customtkinter.CTkButton(control_frame, text="List Available Targets", command=list_avail_targets_clicked)
-avail_targets_button.pack(pady=10)
-
-gal_long_label = Label(control_frame, text="Enter Galactic Longitude:")
-gal_long_label.pack()
-
-gal_long_entry = Entry(control_frame)
-gal_long_entry.pack()
 
 # Start the GUI
 root.mainloop()
