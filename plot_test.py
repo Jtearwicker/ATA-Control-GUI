@@ -22,29 +22,28 @@ import time
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Create the main root
-root = customtkinter.CTk()
+root = tk.Tk()
 root.title("Easy ATA GUI")
 root.geometry("1200x800")
-customtkinter.set_appearance_mode("Light")
 
 # Create the main frame
-main_frame = customtkinter.CTkFrame(master=root)
+main_frame = Frame(root)
 main_frame.pack(fill=BOTH, expand=True)
 
 # Control frame on the left
-control_frame = customtkinter.CTkFrame(master=main_frame, width=300)
+control_frame = Frame(main_frame, width=300)
 control_frame.pack(side=LEFT, fill=Y, padx=10, pady=10)
 
 # Image frame on the right
-image_frame = customtkinter.CTkFrame(master=main_frame, width=900, height=400)
+image_frame = Frame(main_frame, width=900, height=400)
 image_frame.pack(side=TOP, fill=BOTH, expand=True, padx=10, pady=10)
 
 # Terminal frame at the bottom
-terminal_frame = customtkinter.CTkFrame(master=main_frame)
+terminal_frame = Frame(main_frame)
 terminal_frame.pack(side=BOTTOM, fill=BOTH, expand=True, padx=10, pady=10)
 
 # Create a text widget to display the terminal output
-terminal_text = customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
+terminal_text = Text(terminal_frame, height=10, font=("DejaVu Sans Mono", 12))
 terminal_text.pack(fill=BOTH, expand=True)
 
 # Load and resize the image
@@ -163,17 +162,17 @@ def list_avail_targets_clicked():
         
         vis_min_x = 2800 // 14
         vis_min_y = 3850 // 14
-        vis_max_x = max_pix[0]
-        vis_max_y = max_pix[1]
         
         # Create a drawing context on the image
         draw = ImageDraw.Draw(img)
         
         # Draw the visible wedge
-        draw.line([(vis_min_x, vis_min_y), (vis_max_x, vis_max_y)], fill="red", width=2)
+        draw.line([(vis_min_x, vis_min_y), (min_pix[0], min_pix[1])], fill="red", width=2)
+        draw.line([(vis_min_x, vis_min_y), (max_pix[0], max_pix[1])], fill="red", width=2)
         
-        # Draw the target point
+        # Draw the target points
         draw.ellipse((min_pix[0] - 5, min_pix[1] - 5, min_pix[0] + 5, min_pix[1] + 5), fill="blue")
+        draw.ellipse((max_pix[0] - 5, max_pix[1] - 5, max_pix[0] + 5, max_pix[1] + 5), fill="blue")
         
         # Update the image with the new drawings
         img_tk = ImageTk.PhotoImage(img)
@@ -183,23 +182,30 @@ def list_avail_targets_clicked():
     terminal_text.insert(END, "These are the available Galactic longitudes: " + str(avail_long) + "\n")
     return avail_long
 
-test_usrp_button = customtkinter.CTkButton(control_frame, text="Test USRP", command=lambda: run_test_command("uhd_find_devices"))
+# Restore original buttons and galactic longitude entry
+test_usrp_button = Button(control_frame, text="Test USRP", command=lambda: run_test_command("uhd_find_devices"))
 test_usrp_button.pack(pady=10)
 
-reset_usrp_button = customtkinter.CTkButton(control_frame, text="Reset USRP", command=lambda: run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py"))
+reset_usrp_button = Button(control_frame, text="Reset USRP", command=lambda: run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py"))
 reset_usrp_button.pack(pady=10)
 
-activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", command=activate_antenna_clicked)
+activate_antenna_button = Button(control_frame, text="Activate Antenna", command=activate_antenna_clicked)
 activate_antenna_button.pack(pady=10)
 
-antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
+antenna_status_button = Button(control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
 antenna_status_button.pack(pady=10)
 
-shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
+shut_down_antenna_button = Button(control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(pady=10)
 
-avail_targets_button = customtkinter.CTkButton(control_frame, text="List Available Targets", command=list_avail_targets_clicked)
+avail_targets_button = Button(control_frame, text="List Available Targets", command=list_avail_targets_clicked)
 avail_targets_button.pack(pady=10)
+
+gal_long_label = Label(control_frame, text="Enter Galactic Longitude:")
+gal_long_label.pack()
+
+gal_long_entry = Entry(control_frame)
+gal_long_entry.pack()
 
 # Start the GUI
 root.mainloop()
