@@ -207,11 +207,11 @@ def track_source_clicked():
     terminal_text.insert(0.0, "Arrived at galactic coordinate ("+str(gl)+",0)."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
 
 
-def start_progress_bar():
-	progressbar.start()
+def print_text():
+	terminal_text.insert(0.0, "Starting calibration, please wait...\n")
 
 
-activate_antenna_button = customtkinter.CTkButton(control_frame, width=200, height=50, text="Activate Antenna", font=("Arial", 18), command=lambda:[start_progress_bar, activate_antenna_clicked])
+activate_antenna_button = customtkinter.CTkButton(control_frame, width=200, height=50, text="Activate Antenna", font=("Arial", 18), command=lambda:[print_text, activate_antenna_clicked])
 activate_antenna_button.pack(padx=5, pady=5)
 
 progressbar = customtkinter.CTkProgressBar(master=control_frame, mode="determinate", determinate_speed=75)
