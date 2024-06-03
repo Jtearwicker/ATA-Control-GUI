@@ -213,7 +213,7 @@ def track_source_clicked():
 activate_antenna_button = customtkinter.CTkButton(control_frame, width=200, height=50, text="Activate Antenna", font=("Arial", 18), command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
-progressbar = customtkinter.CTkProgressBar(master=control_frame, mode=indeterminate, indeterminate_speed=75)
+progressbar = customtkinter.CTkProgressBar(master=control_frame, mode="indeterminate", indeterminate_speed=75)
 progressbar.pack(padx=5, pady=5)
 
 avail_targets_button = customtkinter.CTkButton(master=control_frame, width=200, height=50, text="Show Available Targets", font=("Arial", 18), command=list_avail_targets_clicked)
