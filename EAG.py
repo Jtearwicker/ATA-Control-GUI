@@ -211,7 +211,7 @@ def start_progress_bar():
 	progressbar.start()
 
 
-activate_antenna_button = customtkinter.CTkButton(control_frame, width=200, height=50, text="Activate Antenna", font=("Arial", 18), command=lambda:[funct1(),activate_antenna_clicked])
+activate_antenna_button = customtkinter.CTkButton(control_frame, width=200, height=50, text="Activate Antenna", font=("Arial", 18), command=lambda:[start_progress_bar, activate_antenna_clicked])
 activate_antenna_button.pack(padx=5, pady=5)
 
 progressbar = customtkinter.CTkProgressBar(master=control_frame, mode="determinate", determinate_speed=75)
