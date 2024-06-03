@@ -43,7 +43,7 @@ terminal_frame = customtkinter.CTkFrame(master=main_frame)
 terminal_frame.pack(side=BOTTOM, fill=BOTH, expand=True, padx=10, pady=10)
 
 # Create a text widget to display the terminal output
-terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 12))
+terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 14))
 terminal_text.pack(fill=BOTH, expand=True)
 
 
@@ -204,27 +204,27 @@ def track_source_clicked():
 
 
     ac.track_source(antennas, radec=[Angle(str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s").hour, Angle(str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s").deg])
-    terminal_text.insert(0.0, "Arrived at galactic coordinate ("+str(gl)+",0)."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
+    terminal_text.insert(END, "Arrived at galactic coordinate ("+str(gl)+",0)."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
 
 
 # Restore original buttons and galactic longitude entry
 
-activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", command=activate_antenna_clicked)
+activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", font=("DejaVu Sans Mono", 14), command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
-avail_targets_button = customtkinter.CTkButton(control_frame, text="Show Available Targets", command=list_avail_targets_clicked)
+avail_targets_button = customtkinter.CTkButton(control_frame, text="Show Available Targets", font=("DejaVu Sans Mono", 14), command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
 
-gal_long_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude")
+gal_long_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude", font=("DejaVu Sans Mono", 14))
 gal_long_entry.pack(padx=5, pady=5)
 
-track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", command=track_source_clicked)
+track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", font=("DejaVu Sans Mono", 14), command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
 
-antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", command=show_ant_status_clicked)
+antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", font=("DejaVu Sans Mono", 14), command=show_ant_status_clicked)
 antenna_status_button.pack(padx=5, pady=5)
 
-shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", command=shut_down_antenna_clicked)
+shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", font=("DejaVu Sans Mono", 14), command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(padx=5, pady=5)
 
 # Start the GUI
