@@ -168,8 +168,8 @@ def list_avail_targets_clicked():
         draw = ImageDraw.Draw(img)
         
         # Draw the visible wedge
-        draw.line([(vis_min_x, vis_min_y), (min_pix[0], min_pix[1])], fill="white", width=2)
-        draw.line([(vis_min_x, vis_min_y), (max_pix[0], max_pix[1])], fill="white", width=2)
+        draw.line([(vis_min_x, vis_min_y), (min_pix[0], min_pix[1])], fill="white", width=4)
+        draw.line([(vis_min_x, vis_min_y), (max_pix[0], max_pix[1])], fill="white", width=4)
         
         # Draw the target points
         
@@ -194,7 +194,7 @@ def track_source_clicked():
 
     draw = ImageDraw.Draw(img)    
     # Draw the visible wedge
-    draw.line([(vis_min_x, vis_min_y), (obs_pix[0], obs_pix[1])], fill="red", width=2)
+    draw.line([(vis_min_x, vis_min_y), (obs_pix[0], obs_pix[1])], fill="red", width=4)
     
     # Update the image with the new drawings
     img_tk = ImageTk.PhotoImage(img)
