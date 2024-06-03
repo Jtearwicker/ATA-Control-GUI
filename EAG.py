@@ -77,8 +77,8 @@ freq = "1420.406"
 
 def activate_antenna_clicked():
 		progressbar.start()
-    run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
-    run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
+		run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
+		run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
     ant_free = str(ac.list_antenna_group('none'))
     if ant_free.find('1a') == -1:
         terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
