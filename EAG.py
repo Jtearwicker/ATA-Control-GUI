@@ -24,7 +24,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # Create the main root
 root = tk.Tk()
 root.title("Easy ATA GUI")
-root.geometry("1200x800")
+root.geometry("1600x800")
 
 # Create the main frame
 main_frame = customtkinter.CTkFrame(master=root)
@@ -43,7 +43,7 @@ terminal_frame = customtkinter.CTkFrame(master=main_frame)
 terminal_frame.pack(side=BOTTOM, fill=BOTH, expand=True, padx=10, pady=10)
 
 # Create a text widget to display the terminal output
-terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1200, font=("DejaVu Sans Mono", 18))
+terminal_text =  customtkinter.CTkTextbox(master=terminal_frame, height=400, width=1600, font=("DejaVu Sans Mono", 18))
 terminal_text.pack(fill=BOTH, expand=True)
 
 
@@ -209,22 +209,22 @@ def track_source_clicked():
 
 # Restore original buttons and galactic longitude entry
 
-activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", font=("TkDefaultFont", 18), command=activate_antenna_clicked)
+activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", font=("Arial", 18), command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
-avail_targets_button = customtkinter.CTkButton(control_frame, text="Show Available Targets", font=("TkDefaultFont", 18), command=list_avail_targets_clicked)
+avail_targets_button = customtkinter.CTkButton(control_frame, text="Show Available Targets", font=("Arial", 18), command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
 
-gal_long_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude", font=("TkDefaultFont", 18))
+gal_long_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude", font=("Arial", 18))
 gal_long_entry.pack(padx=5, pady=5)
 
-track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", font=("TkDefaultFont", 18), command=track_source_clicked)
+track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", font=("Arial", 18), command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
 
-antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", font=("TkDefaultFont", 18), command=show_ant_status_clicked)
+antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", font=("Arial", 18), command=show_ant_status_clicked)
 antenna_status_button.pack(padx=5, pady=5)
 
-shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", font=("TkDefaultFont", 18), command=shut_down_antenna_clicked)
+shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", font=("Arial", 18), command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(padx=5, pady=5)
 
 # Start the GUI
