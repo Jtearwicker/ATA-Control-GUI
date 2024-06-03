@@ -209,22 +209,22 @@ def track_source_clicked():
 
 # Restore original buttons and galactic longitude entry
 
-activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", font=("DejaVu Sans Mono", 18), command=activate_antenna_clicked)
+activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", font=("TkDefaultFont", 18), command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
-avail_targets_button = customtkinter.CTkButton(control_frame, text="Show Available Targets", font=("DejaVu Sans Mono", 18), command=list_avail_targets_clicked)
+avail_targets_button = customtkinter.CTkButton(control_frame, text="Show Available Targets", font=("TkDefaultFont", 18), command=list_avail_targets_clicked)
 avail_targets_button.pack(padx=5, pady=5)
 
-gal_long_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude", font=("DejaVu Sans Mono", 18))
+gal_long_entry = customtkinter.CTkEntry(master=control_frame, placeholder_text="Galactic Longitude", font=("TkDefaultFont", 18))
 gal_long_entry.pack(padx=5, pady=5)
 
-track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", font=("DejaVu Sans Mono", 18), command=track_source_clicked)
+track_source_button = customtkinter.CTkButton(master=control_frame, text="Track Source", font=("TkDefaultFont", 18), command=track_source_clicked)
 track_source_button.pack(padx=5, pady=5)
 
-antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", font=("DejaVu Sans Mono", 18), command=show_ant_status_clicked)
+antenna_status_button = customtkinter.CTkButton(control_frame, text="Show Antenna Status", font=("TkDefaultFont", 18), command=show_ant_status_clicked)
 antenna_status_button.pack(padx=5, pady=5)
 
-shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", font=("DejaVu Sans Mono", 18), command=shut_down_antenna_clicked)
+shut_down_antenna_button = customtkinter.CTkButton(control_frame, text="Shut Down Antenna", font=("TkDefaultFont", 18), command=shut_down_antenna_clicked)
 shut_down_antenna_button.pack(padx=5, pady=5)
 
 # Start the GUI
