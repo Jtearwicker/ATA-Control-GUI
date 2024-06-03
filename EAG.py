@@ -209,7 +209,7 @@ def track_source_clicked():
 
 # Restore original buttons and galactic longitude entry
 
-activate_antenna_button = customtkinter.CTkButton(control_frame, text="Activate Antenna", font=("Arial", 18), command=activate_antenna_clicked)
+activate_antenna_button = customtkinter.CTkButton(control_frame, width=100, height=25, text="Activate Antenna", font=("Arial", 18), command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
 avail_targets_button = customtkinter.CTkButton(control_frame, text="Show Available Targets", font=("Arial", 18), command=list_avail_targets_clicked)
