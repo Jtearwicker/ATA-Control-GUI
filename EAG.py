@@ -24,7 +24,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # Create the main root
 root = tk.Tk()
 root.title("Easy ATA GUI")
-root.geometry("1600x800")
+root.geometry("1600x900")
 
 # Create the main frame
 main_frame = customtkinter.CTkFrame(master=root)
@@ -50,7 +50,7 @@ terminal_text.pack(fill=BOTH, expand=True)
 # Load and resize the image
 image_path = "MWimg.jpg"
 img = Image.open(image_path)
-img = img.resize((400, 400))
+img = img.resize((560, 560))
 img_tk = ImageTk.PhotoImage(img)
 
 # Label to display the image
@@ -158,11 +158,11 @@ def list_avail_targets_clicked():
     if avail_long:
         min_long = avail_long[0]
         max_long = avail_long[-1]
-        min_pix = pxlib[min_long // 10] // 14
-        max_pix = pxlib[max_long // 10] // 14
+        min_pix = pxlib[min_long // 10] // 10
+        max_pix = pxlib[max_long // 10] // 10
         
-        vis_min_x = 2800 // 14
-        vis_min_y = 3850 // 14
+        vis_min_x = 2800 // 10
+        vis_min_y = 3850 // 10
         
         # Create a drawing context on the image
         draw = ImageDraw.Draw(img)
@@ -188,9 +188,9 @@ def track_source_clicked():
     DEC = c.dec.dms
 
     obs_long = gl
-    obs_pix = pxlib[obs_long // 10] // 14
-    vis_min_x = 2800 // 14
-    vis_min_y = 3850 // 14
+    obs_pix = pxlib[obs_long // 10] // 10
+    vis_min_x = 2800 // 10
+    vis_min_y = 3850 // 10
 
     draw = ImageDraw.Draw(img)    
     # Draw the visible wedge
