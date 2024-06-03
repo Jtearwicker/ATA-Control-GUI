@@ -58,16 +58,16 @@ image_label = Label(image_frame, image=img_tk)
 image_label.pack(fill=BOTH, expand=True)
 
 def run_test_command(command):
-    terminal_text.insert(END, "Testing USRPs...\n")
+    terminal_text.insert(0.0, "Testing USRPs...\n")
     stream = os.popen(command)
     out = stream.read()
-    terminal_text.insert(END, out)
+    terminal_text.insert(0.0, out)
 
 def run_reset_command(command):
-    terminal_text.insert(END, "Resetting USRPs clocking...\n")
+    terminal_text.insert(0.0, "Resetting USRPs clocking...\n")
     stream = os.popen(command)
     out = stream.read()
-    terminal_text.insert(END, out)
+    terminal_text.insert(0.0, out)
 
 def run_server_command(command):
     return os.popen(command)
@@ -80,31 +80,31 @@ def activate_antenna_clicked():
     run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
     ant_free = str(ac.list_antenna_group('none'))
     if ant_free.find('1a') == -1:
-        terminal_text.insert(END, "WARNING: Antenna 1a has already been reserved.\n")
+        terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
     else:
         ac.move_ant_group(antennas, 'none', 'atagr')
-        terminal_text.insert(END, "Antenna 1a has been reserved.\n")
+        terminal_text.insert(0.0, "Antenna 1a has been reserved.\n")
     ac.set_freq(freq, antennas, 'd')
     ac.autotune(antennas)
-    terminal_text.insert(END, "Frequency set to 1420.406 MHz and autotuned.\n")
-    terminal_text.insert(END, ac.get_ascii_status()[:348] + "\n")
+    terminal_text.insert(0.0, "Frequency set to 1420.406 MHz and autotuned.\n")
+    terminal_text.insert(0.0, ac.get_ascii_status()[:348] + "\n")
     time.sleep(45)
-    terminal_text.insert(END, "Calibration complete!\n")
+    terminal_text.insert(0.0, "Calibration complete!\n")
 
 def show_ant_status_clicked():
-    terminal_text.insert(END, ac.get_ascii_status()[:348] + "\n")
+    terminal_text.insert(0.0, ac.get_ascii_status()[:348] + "\n")
 
 def shut_down_antenna_clicked():
     run_server_command("pkill -f \"python /home/vgajjar/reu-2023/Hydrogen_line/server.py\"")
-    terminal_text.insert(END, "Disconnected from server.\n")
+    terminal_text.insert(0.0, "Disconnected from server.\n")
     ac.park_antennas(antennas)
-    terminal_text.insert(END, "Antenna 1a has been parked.\n")
+    terminal_text.insert(0.0, "Antenna 1a has been parked.\n")
     ant_free = str(ac.list_antenna_group('none'))
     if ant_free.find('1a') != -1:
-        terminal_text.insert(END, "Antenna 1a has already been released\n")
+        terminal_text.insert(0.0, "Antenna 1a has already been released\n")
     else:
         ac.move_ant_group(antennas, 'atagr', 'none')
-        terminal_text.insert(END, "Antenna 1a has been released.\n")
+        terminal_text.insert(0.0, "Antenna 1a has been released.\n")
 
 def ga2equ(ga):
     #Input: [l,b] in decimal degrees
@@ -152,7 +152,7 @@ def list_avail_targets_clicked():
         elevation = radec2alt(ga2equ(targets[i]))
         
         if elevation > 20:
-            terminal_text.insert(END, "Galactic longitude " + str(targets[i][0]) + " has an elevation of " + str(elevation)[:4] + " degrees above the horizon.\n")
+            terminal_text.insert(0.0, "Galactic longitude " + str(targets[i][0]) + " has an elevation of " + str(elevation)[:4] + " degrees above the horizon.\n")
             avail_long.append(targets[i][0])
     
     if avail_long:
@@ -204,7 +204,7 @@ def track_source_clicked():
 
 
     ac.track_source(antennas, radec=[Angle(str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s").hour, Angle(str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s").deg])
-    terminal_text.insert(END, "Arrived at galactic coordinate ("+str(gl)+",0)."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
+    terminal_text.insert(0.0, "Arrived at galactic coordinate ("+str(gl)+",0)."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
 
 
 # Restore original buttons and galactic longitude entry
