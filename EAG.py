@@ -76,7 +76,6 @@ antennas = ['1a']
 freq = "1420.406"
 
 def activate_antenna_clicked():
-	progressbar.start()
 	run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
 	run_server_command("python /home/vgajjar/reu-2023/Hydrogen_line/server.py")
 	ant_free = str(ac.list_antenna_group('none'))
@@ -208,9 +207,11 @@ def track_source_clicked():
     terminal_text.insert(0.0, "Arrived at galactic coordinate ("+str(gl)+",0)."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
 
 
-# Restore original buttons and galactic longitude entry
+def start_progress_bar():
+	progressbar.start()
 
-activate_antenna_button = customtkinter.CTkButton(control_frame, width=200, height=50, text="Activate Antenna", font=("Arial", 18), command=activate_antenna_clicked)
+
+activate_antenna_button = customtkinter.CTkButton(control_frame, width=200, height=50, text="Activate Antenna", font=("Arial", 18), command=lambda:[funct1(),activate_antenna_clicked])
 activate_antenna_button.pack(padx=5, pady=5)
 
 progressbar = customtkinter.CTkProgressBar(master=control_frame, mode="determinate", determinate_speed=75)
