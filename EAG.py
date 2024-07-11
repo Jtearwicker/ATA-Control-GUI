@@ -95,7 +95,7 @@ def show_ant_status_clicked():
     terminal_text.insert(0.0, ac.get_ascii_status()[:348] + "\n")
 
 def shut_down_antenna_clicked():
-    run_server_command("pkill -f \"python /home/vgajjar/reu-2023/Hydrogen_line/server.py\"")
+    run_server_command("pkill -f \"python /home/gnuradio/Hydrogen_line/server.py\"")
     terminal_text.insert(0.0, "Disconnected from server.\n")
     ac.park_antennas(antennas)
     terminal_text.insert(0.0, "Antenna 1a has been parked.\n")
@@ -170,8 +170,6 @@ def list_avail_targets_clicked():
         # Draw the visible wedge
         draw.line([(vis_min_x, vis_min_y), (min_pix[0], min_pix[1])], fill="white", width=4)
         draw.line([(vis_min_x, vis_min_y), (max_pix[0], max_pix[1])], fill="white", width=4)
-        
-        # Draw the target points
         
         # Update the image with the new drawings
         img_tk = ImageTk.PhotoImage(img)
