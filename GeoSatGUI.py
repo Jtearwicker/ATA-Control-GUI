@@ -80,7 +80,7 @@ def shut_down_antenna_clicked():
 def go_to_xm4_clicked():
     # Slew to preset azimuth and elevation for XM-4
     ac.track_source(antennas, azel=[170.0, 42.0])
-    terminal_text.insert(0.0, "Slewing to XM-4 (Azimuth: 270.0, Elevation: 35.0).\n")
+    terminal_text.insert(0.0, "Slewing to XM-4 (Azimuth: 170.0, Elevation: 42.0).\n")
 
 # Create buttons in the control frame arranged horizontally
 activate_antenna_button = customtkinter.CTkButton(
