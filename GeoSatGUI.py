@@ -78,9 +78,14 @@ def shut_down_antenna_clicked():
         terminal_text.insert(0.0, "Antenna 1a has been released.\n")
 
 def go_to_xm4_clicked():
-    # Slew to preset azimuth and elevation for XM-4
+    # Slew to azimuth and elevation for XM-4
     ac.track_source(antennas, azel=[170.0, 42.0])
     terminal_text.insert(0.0, "Slewing to XM-4 (Azimuth: 170.0, Elevation: 42.0).\n")
+
+def go_away_from_xm4_clicked():
+    # Slew to azimuth and elevation away from XM-4
+    ac.track_source(antennas, azel=[170.0, 62.0])
+    terminal_text.insert(0.0, "Slewing away from XM-4 (Azimuth: 170.0, Elevation: 62.0).\n")
 
 # Create buttons in the control frame arranged horizontally
 activate_antenna_button = customtkinter.CTkButton(
@@ -92,6 +97,11 @@ xm4_button = customtkinter.CTkButton(
     control_frame, width=150, height=40, text="Go To XM-4", font=("Arial", 16), command=go_to_xm4_clicked
 )
 xm4_button.pack(side=LEFT, padx=5, pady=5)
+
+away_from_xm4_button = customtkinter.CTkButton(
+    control_frame, width=150, height=40, text="Go Away From XM-4", font=("Arial", 16), command=go_away_from_xm4_clicked
+)
+away_from_xm4_button.pack(side=LEFT, padx=5, pady=5)
 
 antenna_status_button = customtkinter.CTkButton(
     control_frame, width=150, height=40, text="Show Antenna Status", font=("Arial", 16), command=show_ant_status_clicked
