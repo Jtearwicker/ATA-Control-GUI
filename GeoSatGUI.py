@@ -44,7 +44,7 @@ def run_server_command(command):
     return os.popen(command)
 
 antennas = ['1a']
-freq = "1693.5"  # Updated frequency for geostationary satellites
+freq = "1693.0"  # Updated frequency for GOES-17
 
 def activate_antenna_clicked():
     run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
