@@ -10,7 +10,7 @@ from ATATools import ata_control as ac
 # Create the main root
 root = tk.Tk()
 root.title("Geostationary Satellite GUI")
-root.geometry("800x700")  # Smaller window size
+root.geometry("1000x600")  # Smaller window size
 
 # Create the main frame
 main_frame = customtkinter.CTkFrame(master=root)
