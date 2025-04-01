@@ -122,7 +122,10 @@ def radec2alt(RADEC):
     altitude = aa.alt.value
     return altitude
 
-targets = [[i,0] for i in range(0, 360, 10)]
+targets = [[0,0],[10,0],[20,0],[30,0],[40,0],[50,0],[60,0],[70,0],[80,0],
+[90,0],[100,0],[110,0],[120,0],[130,0],[140,0],[150,0],[160,0],[170,0],
+[180,0],[190,0],[200,0],[210,0],[220,0],[230,0],[240,0],[250,0],[260,0],
+[270,0],[280,0],[290,0],[300,0],[310,0],[320,0],[340,0],[350,0]]
 
 ATA_location = EarthLocation(lat=40.817 * u.deg, lon=-121.47 * u.deg, height=3235 * u.m)
 utc = pytz.timezone('UTC')
@@ -131,29 +134,38 @@ la = pytz.timezone('America/Los_Angeles')
 obs_time = now.astimezone(la)
 alt_az = AltAz(location=ATA_location, obstime=obs_time)
 
-pxlib = np.array([...])  # Truncated for brevity; keep your pxlib here
+pxlib = np.array([[2800, 500],[2233, 650],[1666, 800],[1100, 950],[833, 1443],[566, 1936],[300, 2430],[350, 2903],[400, 3376],[450, 3850],
+                                    [733, 4140],[1016, 4430],[1300, 4720],[1550, 4846],[1800, 4973],[2050, 5100],[2300, 5140],[2550, 5180],[2800, 5220],[3033, 5180],
+                                    [3266, 5140],[3500, 5100],[3766, 4973],[4033, 4846],[4300, 4720],[4583, 4430],[4866, 4140],[5150, 3850],[5200, 3376],[5250, 2903],
+                                    [5300, 2430],[5026, 1936],[4753, 1443],[4480, 950],[3920, 800],[3360, 650]])
 
 avail_long = []
 def list_avail_targets_clicked():
     global avail_long, img_tk, img
-    avail_long = []
+    avail_long = []  # Reset the list each time the button is clicked
     for i in range(0, 35):
         dd_radec = ga2equ(targets[i])
         c = SkyCoord(ra=dd_radec[0] * u.deg, dec=dd_radec[1] * u.deg)
         elevation = radec2alt(ga2equ(targets[i]))
+
         if elevation > 20:
-            terminal_text.insert(0.0, f"Galactic longitude {targets[i][0]} has an elevation of {elevation:.2f} degrees above the horizon.\n")
+            terminal_text.insert(0.0, "Galactic longitude " + str(targets[i][0]) + " has an elevation of " + str(elevation)[:4] + " degrees above the horizon.\n")
             avail_long.append(targets[i][0])
+
     if avail_long:
         min_long = avail_long[0]
         max_long = avail_long[-1]
         min_pix = pxlib[min_long // 10] // 12
         max_pix = pxlib[max_long // 10] // 12
+
         vis_min_x = 2800 // 12
         vis_min_y = 3850 // 12
+
         draw = ImageDraw.Draw(img)
+
         draw.line([(vis_min_x, vis_min_y), (min_pix[0], min_pix[1])], fill="white", width=4)
         draw.line([(vis_min_x, vis_min_y), (max_pix[0], max_pix[1])], fill="white", width=4)
+
         img_tk = ImageTk.PhotoImage(img)
         image_label.config(image=img_tk)
         image_label.image = img_tk
@@ -165,26 +177,29 @@ def track_source_clicked():
     c = SkyCoord(ra = dd_radec[0]*u.deg, dec = dd_radec[1] * u.deg)
     RA = c.ra.hms
     DEC = c.dec.dms
+
     obs_long = gl
     obs_pix = pxlib[obs_long // 10] // 12
     vis_min_x = 2800 // 12
     vis_min_y = 3850 // 12
+
     draw = ImageDraw.Draw(img)
     draw.line([(vis_min_x, vis_min_y), (obs_pix[0], obs_pix[1])], fill="red", width=4)
+
     img_tk = ImageTk.PhotoImage(img)
     image_label.config(image=img_tk)
     image_label.image = img_tk
-    ac.track_source(antennas, radec=[Angle(f"{int(RA[0])}h{int(RA[1])}m{int(RA[2])}s").hour, Angle(f"{int(DEC[0])}d{int(abs(DEC[1]))}m{int(abs(DEC[2]))}s").deg])
-    terminal_text.insert(0.0, f"Arrived at galactic coordinate ({gl},0). RA {int(RA[0])}h{int(RA[1])}m{int(RA[2])}s Dec {int(DEC[0])}d{int(abs(DEC[1]))}m{int(abs(DEC[2]))}s\n")
+
+    ac.track_source(antennas, radec=[Angle(str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s").hour, Angle(str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s").deg])
+    terminal_text.insert(0.0, "Arrived at galactic coordinate ("+str(gl)+",0)."+" RA "+str(int(RA[0]))+"h"+str(int(RA[1]))+"m"+str(int(RA[2]))+"s"+" Dec "+str(int(DEC[0]))+"d"+str(int(abs(DEC[1])))+"m"+str(int(abs(DEC[2])))+"s"+"\n")
 
 def clear_drawings():
     global img, img_tk
-    img = original_img.copy()
+    img.paste(original_img)  # Restore pixels in place
     img_tk = ImageTk.PhotoImage(img)
     image_label.config(image=img_tk)
     image_label.image = img_tk
 
-# Buttons and Entry
 activate_antenna_button = customtkinter.CTkButton(control_frame, width=200, height=50, text="Activate Antenna", font=("Arial", 18), command=activate_antenna_clicked)
 activate_antenna_button.pack(padx=5, pady=5)
 
