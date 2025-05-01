@@ -97,7 +97,7 @@ Mars_button = customtkinter.CTkButton(
 Mars_button.pack(side=LEFT, padx=5, pady=5)
 
 away_from_Mars_button = customtkinter.CTkButton(
-    control_frame, width=150, height=40, text="Go Away From GOES-17", font=("Arial", 16), command=go_away_from_Mars_clicked
+    control_frame, width=150, height=40, text="Go Away From Mars", font=("Arial", 16), command=go_away_from_Mars_clicked
 )
 away_from_Mars_button.pack(side=LEFT, padx=5, pady=5)
 
