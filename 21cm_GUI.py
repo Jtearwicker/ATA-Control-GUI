@@ -24,7 +24,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # Create the main root
 root = tk.Tk()
 root.title("Easy ATA GUI")
-root.geometry("900x900")
+root.geometry("1200x900")
 
 # Create the main frame
 main_frame = customtkinter.CTkFrame(master=root)
