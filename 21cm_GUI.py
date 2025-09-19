@@ -72,7 +72,7 @@ def run_reset_command(command):
 def run_server_command(command):
     return os.popen(command)
 
-antennas = ['1a']
+antennas = ['2a']
 freq = "1420.406"
 
 def activate_antenna_clicked():
