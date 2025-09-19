@@ -79,11 +79,15 @@ def activate_antenna_clicked():
     run_reset_command("/opt/ata-flowgraphs/usrp_reset_clocking.py")
     # run_server_command("python /home/gnuradio/Hydrogen_line/server.py")
     ant_free = str(ac.list_antenna_group('none'))
-    if ant_free.find('1a') == -1:
+    if ant_free.find('2a') == -1:
         terminal_text.insert(0.0, "WARNING: Antenna 1a has already been reserved.\n")
     else:
         ac.move_ant_group(antennas, 'none', 'atagr')
         terminal_text.insert(0.0, "Antenna 1a has been reserved.\n")
+        #att = 20  # Attenuation in dB
+        #ac.rf_switch_thread(antennas)
+        #ac.set_atten_thread([[f'{ant}x', f'{ant}y'] for ant in antennas],
+        #            [[att, att] for ant in antennas])
         ac.set_freq(freq, antennas, 'd')
         ac.autotune(antennas)
         terminal_text.insert(0.0, "Frequency set to 1420.406 MHz and autotuned.\n")
@@ -100,7 +104,7 @@ def shut_down_antenna_clicked():
     ac.park_antennas(antennas)
     terminal_text.insert(0.0, "Antenna 1a has been parked.\n")
     ant_free = str(ac.list_antenna_group('none'))
-    if ant_free.find('1a') != -1:
+    if ant_free.find('2a') != -1:
         terminal_text.insert(0.0, "Antenna 1a has already been released\n")
     else:
         ac.move_ant_group(antennas, 'atagr', 'none')
