@@ -5,6 +5,7 @@ import customtkinter
 import datetime
 import threading
 import subprocess
+import os
 import numpy as np  # for rise/set sampling
 
 # Timezone handling: use stdlib zoneinfo if available, else backports
@@ -58,6 +59,9 @@ CAMERA_PAGE_URL = (
     "http://10.3.0.30/camera/index.html"
     "?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1#/video"
 )
+
+# Directory where USRP test scripts live (home directory)
+HOME_DIR = os.path.expanduser("~")
 
 
 # ======================================================
@@ -230,14 +234,16 @@ def usrp_check_levels():
         Note: channel levels should be around -16 dB in this test
 
     We deliberately do NOT enforce a zero exit code; we mimic os.popen-like
-    behavior and just parse whatever stdout we get.
+    behavior and just parse whatever stdout we get. We also force cwd to
+    the user's home directory, where the scripts live.
     """
     try:
         proc = subprocess.run(
             ["python", "usrp_test.py"],
             text=True,
             capture_output=True,
-            check=False  # DO NOT raise on non-zero exit
+            check=False,           # DO NOT raise on non-zero exit
+            cwd=HOME_DIR           # run from home, not GUI dir
         )
     except Exception as e:
         return [f"Error running usrp_test.py: {e}"]
@@ -267,14 +273,15 @@ def usrp_reset_clocking():
     log only 'Channel ...' and 'Note: ...' lines if present; otherwise
     log stderr or a generic completion line.
 
-    Again, we do NOT enforce zero exit status.
+    Again, we do NOT enforce zero exit status, and we run from HOME_DIR.
     """
     try:
         proc = subprocess.run(
             ["python", "usrp_reset_clocking.py"],
             text=True,
             capture_output=True,
-            check=False
+            check=False,
+            cwd=HOME_DIR
         )
     except Exception as e:
         return [f"Error running usrp_reset_clocking.py: {e}"]
