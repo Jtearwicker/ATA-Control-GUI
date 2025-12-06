@@ -60,7 +60,7 @@ CAMERA_PAGE_URL = (
     "?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1#/video"
 )
 
-# Directory where USRP test scripts live (home directory)
+# Directory where USRP test scripts *might* live (currently unused but kept)
 HOME_DIR = os.path.expanduser("~")
 
 
@@ -234,16 +234,17 @@ def usrp_check_levels():
         Note: channel levels should be around -16 dB in this test
 
     We deliberately do NOT enforce a zero exit code; we mimic os.popen-like
-    behavior and just parse whatever stdout we get. We also force cwd to
-    the user's home directory, where the scripts live.
+    behavior and just parse whatever stdout we get. We also invoke the command
+    exactly as you do in the shell (`usrp_test.py`) via the shell so $PATH is
+    used.
     """
     try:
         proc = subprocess.run(
-            ["python", "usrp_test.py"],
+            "usrp_test.py",
             text=True,
             capture_output=True,
-            check=False,           # DO NOT raise on non-zero exit
-            cwd=HOME_DIR           # run from home, not GUI dir
+            check=False,   # DO NOT raise on non-zero exit
+            shell=True     # use shell so PATH resolution matches your CLI
         )
     except Exception as e:
         return [f"Error running usrp_test.py: {e}"]
@@ -273,15 +274,16 @@ def usrp_reset_clocking():
     log only 'Channel ...' and 'Note: ...' lines if present; otherwise
     log stderr or a generic completion line.
 
-    Again, we do NOT enforce zero exit status, and we run from HOME_DIR.
+    Again, we do NOT enforce zero exit status, and we call the script
+    via the shell so PATH handles it.
     """
     try:
         proc = subprocess.run(
-            ["python", "usrp_reset_clocking.py"],
+            "usrp_reset_clocking.py",
             text=True,
             capture_output=True,
             check=False,
-            cwd=HOME_DIR
+            shell=True
         )
     except Exception as e:
         return [f"Error running usrp_reset_clocking.py: {e}"]
