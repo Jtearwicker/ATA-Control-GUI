@@ -28,8 +28,12 @@ from ATATools import ata_control as ac
 # CONFIG / GLOBALS
 # ======================================================
 
-# For now, single-antenna operation; change here later to generalize
-antennas = ['1a']
+# Antenna set that can be chosen in the GUI (for now just 1a)
+AVAILABLE_ANTENNAS = ['1a']
+
+# Current antenna selection used by the control wrappers.
+# This will be updated from the "Select antennas" dropdown.
+antennas = AVAILABLE_ANTENNAS.copy()
 
 # ATA site (approx Hat Creek / ATA)
 ATA_LOCATION = EarthLocation.from_geodetic(
@@ -242,7 +246,13 @@ class ATAObservationGUI:
         # Selected profile – explicitly default to Custom
         self.selected_profile = tk.StringVar(value="Custom")
 
+        # Selected antennas (as text in the dropdown)
+        self.antenna_select_var = tk.StringVar(value="1a")
+
         self._build_layout()
+
+        # Ensure global antennas initialised from dropdown
+        self._update_antennas_from_selection(self.antenna_select_var.get())
 
     # ---------- Layout ----------
 
@@ -282,6 +292,16 @@ class ATAObservationGUI:
 
         button_frame = customtkinter.CTkFrame(parent)
         button_frame.pack(fill="x", pady=(0, 10))
+
+        # New: antenna selection dropdown (for now only '1a')
+        antenna_select = customtkinter.CTkComboBox(
+            button_frame,
+            values=AVAILABLE_ANTENNAS,
+            variable=self.antenna_select_var,
+            command=self.on_antennas_changed,
+            width=90
+        )
+        antenna_select.pack(side="left", padx=5, pady=5)
 
         reserve_btn = customtkinter.CTkButton(
             button_frame,
@@ -539,6 +559,24 @@ class ATAObservationGUI:
 
     # ---------- Helpers ----------
 
+    def _parse_antenna_selection(self, text: str):
+        """
+        Parse a comma-separated antenna selection string into a list.
+
+        For now the combo only ever returns '1a', but this is written so that
+        in the future if the control is changed to allow multi-selection or
+        user-editable values like '1a, 1f, 5c', we get ['1a','1f','5c'].
+        """
+        parts = [p.strip() for p in text.split(",") if p.strip()]
+        return parts if parts else AVAILABLE_ANTENNAS.copy()
+
+    def _update_antennas_from_selection(self, selection_text: str):
+        """
+        Update the global 'antennas' list from the selection string.
+        """
+        global antennas
+        antennas = self._parse_antenna_selection(selection_text)
+
     def log(self, msg):
         # Local time in Pacific, with timezone label
         now_local = datetime.datetime.now(LOCAL_TZ)
@@ -617,6 +655,13 @@ class ATAObservationGUI:
         self.root.after(10000, self._update_time_info)
 
     # ---------- Callbacks: Antenna ----------
+
+    def on_antennas_changed(self, choice: str):
+        """
+        Callback when the 'Select antennas' dropdown changes.
+        """
+        self._update_antennas_from_selection(choice)
+        self.log(f"Selected antennas: {antennas}")
 
     def on_reserve_clicked(self):
         self.run_with_progress("Reserving antennas", ata_reserve_antennas)
