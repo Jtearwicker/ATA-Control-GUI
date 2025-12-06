@@ -4,7 +4,7 @@ import customtkinter
 
 import datetime
 import threading
-import numpy as np  # NEW: for rise/set time sampling
+import numpy as np  # for rise/set sampling
 
 # Timezone handling: use stdlib zoneinfo if available, else backports
 try:
@@ -335,7 +335,7 @@ class ATAObservationGUI:
         freq_name_label = customtkinter.CTkLabel(freq_subframe, text="Frequency")
         freq_name_label.pack(side="left", padx=(0, 5), pady=5)
 
-        # BLANK by default (no "1420.405" placeholder)
+        # BLANK by default
         self.freq_entry = customtkinter.CTkEntry(
             freq_subframe,
             placeholder_text="",
@@ -391,18 +391,23 @@ class ATAObservationGUI:
             )
             rb.pack(side="left", padx=(0, 5))
 
+        # Coordinate input frame: left = fields, right = button
         coord_input_frame = customtkinter.CTkFrame(coord_frame)
         coord_input_frame.pack(fill="x", pady=(5, 5))
 
+        # Left side: labels + entries (RA/Dec, Alt/Az, Galactic, Source name)
+        self.coord_fields_frame = customtkinter.CTkFrame(coord_input_frame)
+        self.coord_fields_frame.pack(side="left", fill="x", expand=True)
+
         self.coord1_label = customtkinter.CTkLabel(
-            coord_input_frame, text="RA (h:m:s)"
+            self.coord_fields_frame, text="RA (h:m:s)"
         )
         self.coord1_label.grid(
             row=0, column=0, sticky="w", padx=(0, 5), pady=2
         )
 
         self.coord1_entry = customtkinter.CTkEntry(
-            coord_input_frame,
+            self.coord_fields_frame,
             width=140,
             placeholder_text="12:34:56"
         )
@@ -411,14 +416,14 @@ class ATAObservationGUI:
         )
 
         self.coord2_label = customtkinter.CTkLabel(
-            coord_input_frame, text="Dec (d:m:s)"
+            self.coord_fields_frame, text="Dec (d:m:s)"
         )
         self.coord2_label.grid(
             row=1, column=0, sticky="w", padx=(0, 5), pady=2
         )
 
         self.coord2_entry = customtkinter.CTkEntry(
-            coord_input_frame,
+            self.coord_fields_frame,
             width=140,
             placeholder_text="+12:34:56"
         )
@@ -427,30 +432,23 @@ class ATAObservationGUI:
         )
 
         self.name_label = customtkinter.CTkLabel(
-            coord_input_frame, text="Source name"
+            self.coord_fields_frame, text="Source name"
         )
-        self.name_label.grid(
-            row=2, column=0, sticky="w", padx=(0, 5), pady=2
-        )
-
         self.name_entry = customtkinter.CTkEntry(
-            coord_input_frame,
+            self.coord_fields_frame,
             width=180,
             placeholder_text="3C286"
         )
-        self.name_entry.grid(
-            row=2, column=1, sticky="w", padx=(0, 5), pady=2
-        )
+        # name_label/name_entry will be gridded only in "name" mode
 
-        # NEW: Check source location button, to the right of coord entries
+        # Right side: fixed-size "Check source location" button
         self.check_source_btn = customtkinter.CTkButton(
             coord_input_frame,
             text="Check source location",
-            command=self.on_check_source_location_clicked
+            command=self.on_check_source_location_clicked,
+            width=180
         )
-        self.check_source_btn.grid(
-            row=0, column=2, rowspan=3, padx=(10, 0), pady=2, sticky="ns"
-        )
+        self.check_source_btn.pack(side="right", padx=(10, 0), pady=2)
 
         # Track / stop buttons
         track_button_frame = customtkinter.CTkFrame(coord_frame)
@@ -707,8 +705,8 @@ class ATAObservationGUI:
             self.coord2_label.grid(row=1, column=0, sticky="w", padx=(0, 5), pady=2)
             self.coord2_entry.grid(row=1, column=1, sticky="w", padx=(0, 5), pady=2)
             # Hide source-name row
-            self.name_label.grid(row=2, column=0, sticky="w", padx=(0, 5), pady=2)
-            self.name_entry.grid(row=2, column=1, sticky="w", padx=(0, 5), pady=2)
+            self.name_label.grid_remove()
+            self.name_entry.grid_remove()
 
             self.coord1_label.configure(text="RA (h:m:s)")
             self.coord2_label.configure(text="Dec (d:m:s)")
@@ -720,8 +718,8 @@ class ATAObservationGUI:
             self.coord1_entry.grid(row=0, column=1, sticky="w", padx=(0, 5), pady=2)
             self.coord2_label.grid(row=1, column=0, sticky="w", padx=(0, 5), pady=2)
             self.coord2_entry.grid(row=1, column=1, sticky="w", padx=(0, 5), pady=2)
-            self.name_label.grid(row=2, column=0, sticky="w", padx=(0, 5), pady=2)
-            self.name_entry.grid(row=2, column=1, sticky="w", padx=(0, 5), pady=2)
+            self.name_label.grid_remove()
+            self.name_entry.grid_remove()
 
             self.coord1_label.configure(text="Alt (deg)")
             self.coord2_label.configure(text="Az (deg)")
@@ -733,8 +731,8 @@ class ATAObservationGUI:
             self.coord1_entry.grid(row=0, column=1, sticky="w", padx=(0, 5), pady=2)
             self.coord2_label.grid(row=1, column=0, sticky="w", padx=(0, 5), pady=2)
             self.coord2_entry.grid(row=1, column=1, sticky="w", padx=(0, 5), pady=2)
-            self.name_label.grid(row=2, column=0, sticky="w", padx=(0, 5), pady=2)
-            self.name_entry.grid(row=2, column=1, sticky="w", padx=(0, 5), pady=2)
+            self.name_label.grid_remove()
+            self.name_entry.grid_remove()
 
             self.coord1_label.configure(text="l (deg)")
             self.coord2_label.configure(text="b (deg)")
@@ -772,7 +770,7 @@ class ATAObservationGUI:
         if mode == "name":
             if not name:
                 raise ValueError("Please enter a source name to look up.")
-            # This uses Astropy's name resolver (Simbad, etc.)
+            # Astropy name resolver (ICRS/J2000-ish)
             c = SkyCoord.from_name(name)
             label = f"Source '{name}'"
             return c.icrs, label
@@ -846,6 +844,12 @@ class ATAObservationGUI:
                 coord_icrs, ATA_LOCATION, horizon_deg=18.0
             )
             lines = []
+
+            # Explicitly log the ICRS RA/Dec being used (to debug "wrong coordinates" issues)
+            ra_str = coord_icrs.ra.to_string(unit=u.hour, sep=':', precision=2, pad=True)
+            dec_str = coord_icrs.dec.to_string(unit=u.deg, sep=':', precision=2, alwayssign=True, pad=True)
+            lines.append(f"{label}: ICRS coordinates = RA {ra_str}, Dec {dec_str}")
+
             lines.append(f"{label}: Elevation now = {alt_now_deg:.2f} deg")
 
             if is_up:
@@ -853,7 +857,7 @@ class ATAObservationGUI:
             else:
                 lines.append(f"{label} is NOT up (below 18°).")
 
-            # Rise time message
+            # Rise time message (local time in America/Los_Angeles)
             if rise_time is not None:
                 rt_local = rise_time.to_datetime(timezone=LOCAL_TZ)
                 lines.append(
@@ -872,7 +876,7 @@ class ATAObservationGUI:
                         "(source stays below threshold)."
                     )
 
-            # Set time message
+            # Set time message (local time in America/Los_Angeles)
             if set_time is not None:
                 st_local = set_time.to_datetime(timezone=LOCAL_TZ)
                 lines.append(
@@ -903,7 +907,7 @@ class ATAObservationGUI:
         coord2 = self.coord2_entry.get().strip()
         name = self.name_entry.get().strip()
 
-        # Source-name mode: use ATA catalog directly, no RA/Dec required
+        # Source-name mode: use ATA catalog directly, no RA/Dec required here
         if mode == "name":
             if not name:
                 messagebox.showerror(
