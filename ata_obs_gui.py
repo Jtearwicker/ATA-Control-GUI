@@ -18,7 +18,6 @@ from astropy.coordinates import (
     AltAz,
     EarthLocation,
     get_body,
-    solar_system_ephemeris,
 )
 from astropy.time import Time
 
@@ -216,16 +215,6 @@ def ata_track_radec_degrees(ra_deg, dec_deg):
     )
 
 
-def ata_stop_tracking():
-    """
-    There is no explicit 'stop tracking' in the notebook examples.
-
-    For now, this is a no-op with a log message to keep behavior explicit.
-    If you later define a proper stop command, wire it here.
-    """
-    return "No explicit stop-tracking command defined; use 'Park' to stop motion."
-
-
 # ======================================================
 # GUI
 # ======================================================
@@ -286,7 +275,7 @@ class ATAObservationGUI:
         # ---- Antenna control ----
         antenna_label = customtkinter.CTkLabel(
             parent,
-            text=f"Antenna Control {antennas}",
+            text="Antenna Control",
             font=("Arial", 18, "bold")
         )
         antenna_label.pack(pady=(5, 5))
@@ -296,21 +285,14 @@ class ATAObservationGUI:
 
         reserve_btn = customtkinter.CTkButton(
             button_frame,
-            text="Reserve",
+            text="Reserve Antenna(s)",
             command=self.on_reserve_clicked
         )
         reserve_btn.pack(side="left", padx=5, pady=5)
 
-        park_btn = customtkinter.CTkButton(
-            button_frame,
-            text="Park",
-            command=self.on_park_clicked
-        )
-        park_btn.pack(side="left", padx=5, pady=5)
-
         release_btn = customtkinter.CTkButton(
             button_frame,
-            text="Release",
+            text="Release Antenna(s)",
             command=self.on_release_clicked
         )
         release_btn.pack(side="left", padx=5, pady=5)
@@ -456,7 +438,7 @@ class ATAObservationGUI:
         )
         self.check_source_btn.pack(side="right", padx=(10, 0), pady=2)
 
-        # Track / stop buttons
+        # Track / Park buttons
         track_button_frame = customtkinter.CTkFrame(coord_frame)
         track_button_frame.pack(fill="x", pady=(5, 0))
 
@@ -467,12 +449,12 @@ class ATAObservationGUI:
         )
         track_btn.pack(side="left", padx=5, pady=5)
 
-        stop_track_btn = customtkinter.CTkButton(
+        park_btn = customtkinter.CTkButton(
             track_button_frame,
-            text="Stop tracking",
-            command=self.on_stop_tracking_clicked
+            text="Park Antenna(s)",
+            command=self.on_park_clicked
         )
-        stop_track_btn.pack(side="left", padx=5, pady=5)
+        park_btn.pack(side="left", padx=5, pady=5)
 
         # Time / LST info
         self.info_label = customtkinter.CTkLabel(
@@ -492,10 +474,6 @@ class ATAObservationGUI:
         status_frame = customtkinter.CTkFrame(notebook)
         notebook.add(status_frame, text="Status")
 
-        # Parsed table for antenna 1a
-        self.status_tree = ttk.Treeview(status_frame, show="headings", height=1)
-        self.status_tree.pack(fill="x", padx=5, pady=5)
-
         self.status_text = tk.Text(
             status_frame, wrap="word", height=20, width=80
         )
@@ -505,7 +483,7 @@ class ATAObservationGUI:
 
         refresh_btn = customtkinter.CTkButton(
             status_frame,
-            text="Refresh status",
+            text="Show antenna status",
             command=self.on_refresh_status_clicked
         )
         refresh_btn.pack(pady=5)
@@ -572,12 +550,14 @@ class ATAObservationGUI:
         self.log_text.see("1.0")
         self.log_text.update_idletasks()
 
-    def run_with_progress(self, description, func, callback=None):
+    def run_with_progress(self, description, func, callback=None, log_result=True):
         """
         Run `func` in a background thread while showing an
         indeterminate progress bar. `func` returns a string or a
         list/tuple of strings to log. If callback is provided, it will
-        be called with the result on the main thread after logging.
+        be called with the result on the main thread after logging
+        (unless log_result is False, in which case only the callback
+        handles the result).
         """
 
         def worker():
@@ -592,18 +572,20 @@ class ATAObservationGUI:
                 self.progressbar.stop()
                 self.progress_label.configure(text="")
                 if error is not None:
+                    # Errors still get logged regardless of log_result
                     self.log(f"{description} FAILED: {error}")
                     messagebox.showerror(
                         "Error", f"{description} failed:\n{error}"
                     )
                 else:
-                    if isinstance(result, str):
-                        self.log(result)
-                    elif isinstance(result, (list, tuple)):
-                        for line in result:
-                            self.log(line)
-                    else:
-                        self.log(f"{description} completed.")
+                    if log_result:
+                        if isinstance(result, str):
+                            self.log(result)
+                        elif isinstance(result, (list, tuple)):
+                            for line in result:
+                                self.log(line)
+                        else:
+                            self.log(f"{description} completed.")
                     if callback is not None:
                         callback(result)
 
@@ -798,8 +780,6 @@ class ATAObservationGUI:
             if name_lower in body_map:
                 # Solar System body: use ephemeris-based position now, at ATA
                 now = Time.now()
-                # Use default ephemeris; if a custom one is configured at ATA,
-                # this can be changed later.
                 body = get_body(body_map[name_lower], now, ATA_LOCATION)
                 c = body.icrs
                 label = f"Solar-system body '{name}'"
@@ -1009,9 +989,6 @@ class ATAObservationGUI:
             do_track
         )
 
-    def on_stop_tracking_clicked(self):
-        self.run_with_progress("Stopping tracking", ata_stop_tracking)
-
     # ---------- Callbacks: Status ----------
 
     def on_refresh_status_clicked(self):
@@ -1021,68 +998,16 @@ class ATAObservationGUI:
         def update_status(text):
             if not isinstance(text, str):
                 return
-
-            # Full status in text box
+            # Full status in text box only (no logging to bottom console)
             self.status_text.delete("1.0", tk.END)
             self.status_text.insert("1.0", text)
 
-            # Parse header + row for 1a
-            header_tokens, row_tokens = self._parse_ascii_status_for_antenna(
-                text, "1a"
-            )
-            if header_tokens and row_tokens:
-                # Configure treeview
-                self.status_tree.delete(*self.status_tree.get_children())
-                self.status_tree["columns"] = header_tokens
-                for col in header_tokens:
-                    self.status_tree.heading(col, text=col)
-                    self.status_tree.column(col, width=80, anchor="center")
-                self.status_tree.insert("", "end", values=row_tokens)
-
         self.run_with_progress(
-            "Refreshing ATA status", do_status, callback=update_status
+            "Refreshing ATA status",
+            do_status,
+            callback=update_status,
+            log_result=False
         )
-
-    @staticmethod
-    def _parse_ascii_status_for_antenna(ascii_status: str, antenna: str):
-        """
-        Simple parser for ac.get_ascii_status().
-
-        Heuristic:
-        - Find a header line whose first token starts with 'ant'.
-        - Find a row whose first token is the requested antenna.
-        - Split both lines on whitespace and zip them together.
-        """
-        lines = ascii_status.splitlines()
-        header_tokens = None
-        row_tokens = None
-
-        for i, line in enumerate(lines):
-            stripped = line.strip()
-            if not stripped:
-                continue
-            tokens = stripped.split()
-            # header line
-            if header_tokens is None and tokens and tokens[0].lower().startswith("ant"):
-                header_tokens = tokens
-            # antenna row
-            if tokens and tokens[0].lower() == antenna.lower():
-                row_tokens = tokens
-                # Grab header from previous line if needed
-                if header_tokens is None and i > 0:
-                    prev = lines[i - 1].strip().split()
-                    if prev and prev[0].lower().startswith("ant"):
-                        header_tokens = prev
-                break
-
-        if header_tokens and row_tokens:
-            if len(row_tokens) > len(header_tokens):
-                row_tokens = row_tokens[: len(header_tokens)]
-            elif len(row_tokens) < len(header_tokens):
-                row_tokens = row_tokens + [""] * (len(header_tokens) - len(row_tokens))
-            return header_tokens, row_tokens
-
-        return None, None
 
     # ---------- Camera: no integrated stream ----------
 
