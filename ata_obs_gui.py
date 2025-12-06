@@ -13,7 +13,13 @@ except ImportError:
     from backports.zoneinfo import ZoneInfo
 
 import astropy.units as u
-from astropy.coordinates import SkyCoord, AltAz, EarthLocation
+from astropy.coordinates import (
+    SkyCoord,
+    AltAz,
+    EarthLocation,
+    get_body,
+    solar_system_ephemeris,
+)
 from astropy.time import Time
 
 from ATATools import ata_control as ac
@@ -395,7 +401,7 @@ class ATAObservationGUI:
         coord_input_frame = customtkinter.CTkFrame(coord_frame)
         coord_input_frame.pack(fill="x", pady=(5, 5))
 
-        # Left side: labels + entries (RA/Dec, Alt/Az, Galactic, Source name)
+        # Left side: labels + entries
         self.coord_fields_frame = customtkinter.CTkFrame(coord_input_frame)
         self.coord_fields_frame.pack(side="left", fill="x", expand=True)
 
@@ -766,14 +772,43 @@ class ATAObservationGUI:
         """
         Resolve the user inputs into an ICRS SkyCoord plus a human-readable label.
         Used by the 'Check source location' feature.
+
+        For 'Source name':
+          - If the name matches a Solar System body, use ephemerides (get_body)
+            at the current time and ATA location.
+          - Otherwise, use SkyCoord.from_name (Simbad/etc.).
         """
         if mode == "name":
             if not name:
                 raise ValueError("Please enter a source name to look up.")
-            # Astropy name resolver (ICRS/J2000-ish)
-            c = SkyCoord.from_name(name)
-            label = f"Source '{name}'"
-            return c.icrs, label
+
+            name_lower = name.strip().lower()
+            body_map = {
+                "sun": "sun",
+                "moon": "moon",
+                "mercury": "mercury",
+                "venus": "venus",
+                "mars": "mars",
+                "jupiter": "jupiter",
+                "saturn": "saturn",
+                "uranus": "uranus",
+                "neptune": "neptune",
+            }
+
+            if name_lower in body_map:
+                # Solar System body: use ephemeris-based position now, at ATA
+                now = Time.now()
+                # Use default ephemeris; if a custom one is configured at ATA,
+                # this can be changed later.
+                body = get_body(body_map[name_lower], now, ATA_LOCATION)
+                c = body.icrs
+                label = f"Solar-system body '{name}'"
+                return c, label
+            else:
+                # Generic name: Simbad / Vizier resolver
+                c = SkyCoord.from_name(name)
+                label = f"Source '{name}'"
+                return c.icrs, label
 
         if mode == "radec":
             if not coord1 or not coord2:
@@ -845,7 +880,7 @@ class ATAObservationGUI:
             )
             lines = []
 
-            # Explicitly log the ICRS RA/Dec being used (to debug "wrong coordinates" issues)
+            # Explicitly log the ICRS RA/Dec being used
             ra_str = coord_icrs.ra.to_string(unit=u.hour, sep=':', precision=2, pad=True)
             dec_str = coord_icrs.dec.to_string(unit=u.deg, sep=':', precision=2, alwayssign=True, pad=True)
             lines.append(f"{label}: ICRS coordinates = RA {ra_str}, Dec {dec_str}")
