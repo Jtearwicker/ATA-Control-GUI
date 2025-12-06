@@ -228,43 +228,72 @@ def usrp_check_levels():
         Channel 0 level -16.19 dB
         ...
         Note: channel levels should be around -16 dB in this test
+
+    We deliberately do NOT enforce a zero exit code; we mimic os.popen-like
+    behavior and just parse whatever stdout we get.
     """
-    proc = subprocess.run(
-        ["python", "usrp_test.py"],
-        text=True,
-        capture_output=True,
-        check=True
-    )
-    lines = proc.stdout.splitlines()
+    try:
+        proc = subprocess.run(
+            ["python", "usrp_test.py"],
+            text=True,
+            capture_output=True,
+            check=False  # DO NOT raise on non-zero exit
+        )
+    except Exception as e:
+        return [f"Error running usrp_test.py: {e}"]
+
+    stdout_lines = proc.stdout.splitlines() if proc.stdout else []
+    stderr_lines = proc.stderr.splitlines() if proc.stderr else []
+
+    # Filter out the interesting lines from stdout
     filtered = [
-        line for line in lines
+        line for line in stdout_lines
         if line.startswith("Channel ") or line.startswith("Note:")
     ]
-    if not filtered:
-        filtered = ["usrp_test.py completed, but no channel-level lines were found."]
-    return filtered
+
+    if filtered:
+        return filtered
+
+    # If no interesting lines, fall back to stderr or a generic message
+    if stderr_lines:
+        return ["usrp_test.py stderr:"] + stderr_lines
+
+    return [f"usrp_test.py finished with return code {proc.returncode}, no output."]
 
 
 def usrp_reset_clocking():
     """
     Run 'usrp_reset_clocking.py' and apply the same filtering logic:
     log only 'Channel ...' and 'Note: ...' lines if present; otherwise
-    log a generic completion line.
+    log stderr or a generic completion line.
+
+    Again, we do NOT enforce zero exit status.
     """
-    proc = subprocess.run(
-        ["python", "usrp_reset_clocking.py"],
-        text=True,
-        capture_output=True,
-        check=True
-    )
-    lines = proc.stdout.splitlines()
+    try:
+        proc = subprocess.run(
+            ["python", "usrp_reset_clocking.py"],
+            text=True,
+            capture_output=True,
+            check=False
+        )
+    except Exception as e:
+        return [f"Error running usrp_reset_clocking.py: {e}"]
+
+    stdout_lines = proc.stdout.splitlines() if proc.stdout else []
+    stderr_lines = proc.stderr.splitlines() if proc.stderr else []
+
     filtered = [
-        line for line in lines
+        line for line in stdout_lines
         if line.startswith("Channel ") or line.startswith("Note:")
     ]
-    if not filtered:
-        filtered = ["usrp_reset_clocking.py completed."]
-    return filtered
+
+    if filtered:
+        return filtered
+
+    if stderr_lines:
+        return ["usrp_reset_clocking.py stderr:"] + stderr_lines
+
+    return [f"usrp_reset_clocking.py finished with return code {proc.returncode}."]
 
 
 # ======================================================
