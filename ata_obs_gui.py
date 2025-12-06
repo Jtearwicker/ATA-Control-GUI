@@ -5,7 +5,7 @@ from tkinterweb import HtmlFrame
 
 import datetime
 import threading
-from zoneinfo import ZoneInfo  # for local time
+from backports.zoneinfo import ZoneInfo
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord, AltAz, EarthLocation
