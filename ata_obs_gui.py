@@ -115,34 +115,16 @@ def ata_get_status_text():
     return ac.get_ascii_status()
 
 
-def ata_set_freq_and_atten(freq_mhz, atten_db):
+def ata_set_frequency(freq_mhz):
     """
-    Set observing frequency to freq_mhz (MHz) and IF attenuation, using the
-    same protocol as the ATA control notebook:
-
-        att = 20  # dB
-        ac.rf_switch_thread(antennas)
-        ac.set_atten_thread([[f'{ant}x', f'{ant}y'] for ant in antennas],
-                            [[att, att] for ant in antennas])
-        freq = 1420.405  # MHz
-        lo = 'd'
-        ac.set_freq(freq, antennas, lo)
+    Set observing frequency to freq_mhz (MHz) only, without changing attenuation
+    or RF switch settings.
+    Uses:
+        ac.set_freq(freq_mhz, antennas, lo)
     """
-    att = float(atten_db)
-
-    # RF switch matrix + attenuators
-    ac.rf_switch_thread(antennas)
-    ac.set_atten_thread([[f"{ant}x", f"{ant}y"] for ant in antennas], [[att, att] for ant in antennas])
-
-    # Set LO and frequency in MHz
-    freq = freq_mhz
     lo = "d"
-    ac.set_freq(freq, antennas, lo)
-
-    return (
-        f"RF switch set for {antennas}; attenuation = {att:.1f} dB; "
-        f"frequency set to {freq_mhz:.6f} MHz on LO '{lo}'."
-    )
+    ac.set_freq(freq_mhz, antennas, lo)
+    return f"Frequency set to {freq_mhz:.6f} MHz on antennas {antennas} with LO '{lo}'."
 
 
 def ata_autotune():
@@ -263,7 +245,7 @@ class ATAObservationGUI:
         )
         release_btn.pack(side="left", padx=5, pady=5)
 
-        # ---- Frequency / profile / attenuation ----
+        # ---- Frequency / profile ----
         freq_frame = customtkinter.CTkFrame(parent)
         freq_frame.pack(fill="x", pady=(5, 10))
 
@@ -282,11 +264,10 @@ class ATAObservationGUI:
         )
         profile_combo.pack(fill="x", pady=(0, 5))
 
-        # Frequency + attenuation row
+        # Frequency row (no attenuation)
         freq_subframe = customtkinter.CTkFrame(freq_frame)
         freq_subframe.pack(fill="x")
 
-        # Labels next to frequency and attenuation entries
         freq_name_label = customtkinter.CTkLabel(freq_subframe, text="Freq:")
         freq_name_label.pack(side="left", padx=(0, 5), pady=5)
 
@@ -300,23 +281,9 @@ class ATAObservationGUI:
         freq_unit_label = customtkinter.CTkLabel(freq_subframe, text="MHz")
         freq_unit_label.pack(side="left", padx=(0, 10), pady=5)
 
-        atten_name_label = customtkinter.CTkLabel(freq_subframe, text="Atten:")
-        atten_name_label.pack(side="left", padx=(0, 5), pady=5)
-
-        # attenuation entry
-        self.atten_entry = customtkinter.CTkEntry(
-            freq_subframe,
-            placeholder_text="20",
-            width=60
-        )
-        self.atten_entry.pack(side="left", padx=(0, 5), pady=5)
-
-        atten_label = customtkinter.CTkLabel(freq_subframe, text="dB")
-        atten_label.pack(side="left", padx=(0, 10), pady=5)
-
         apply_freq_btn = customtkinter.CTkButton(
             freq_subframe,
-            text="Set Freq + Atten",
+            text="Set frequency",
             command=self.on_set_frequency_clicked
         )
         apply_freq_btn.pack(side="left", padx=5, pady=5)
@@ -599,7 +566,7 @@ class ATAObservationGUI:
     def on_release_clicked(self):
         self.run_with_progress("Releasing antennas", ata_release_antennas)
 
-    # ---------- Callbacks: Frequency / profiles / attenuation ----------
+    # ---------- Callbacks: Frequency / profiles ----------
 
     def on_profile_changed(self, *_):
         profile = self.selected_profile.get()
@@ -624,21 +591,11 @@ class ATAObservationGUI:
             )
             return
 
-        atten_text = self.atten_entry.get().strip() or "20"
-        try:
-            atten_db = float(atten_text)
-        except ValueError:
-            messagebox.showerror(
-                "Invalid attenuation",
-                f"Could not parse attenuation '{atten_text}' as a number."
-            )
-            return
-
         def do_set():
-            return ata_set_freq_and_atten(freq_mhz, atten_db)
+            return ata_set_frequency(freq_mhz)
 
         self.run_with_progress(
-            f"Setting frequency to {freq_mhz:.6f} MHz and attenuation {atten_db:.1f} dB",
+            f"Setting frequency to {freq_mhz:.6f} MHz",
             do_set
         )
 
