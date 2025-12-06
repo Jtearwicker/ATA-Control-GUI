@@ -117,27 +117,35 @@ def ata_get_status_text():
 
 def ata_set_freq_and_atten(freq_hz, atten_db):
     """
-    Set observing frequency to freq_hz (Hz) and IF attenuation.
+    Set observing frequency to freq_hz (Hz) and IF attenuation, using the
+    same protocol as the ATA control notebook:
 
-    Uses:
-      - ac.set_freq(freq_mhz, antennas, 'd')
-      - ac.rf_switch_thread(antennas)
-      - ac.set_atten_thread(...)
-    Does NOT call autotune (separate button handles that).
+        att = 20  # dB
+        ac.rf_switch_thread(antennas)
+        ac.set_atten_thread([[f'{ant}x', f'{ant}y'] for ant in antennas],
+                            [[att, att] for ant in antennas])
+        freq = 1420.405  # MHz
+        lo = 'd'
+        ac.set_freq(freq, antennas, lo)
     """
+    # Convert from Hz (GUI) to MHz (ATATools API)
     freq_mhz = freq_hz / 1e6
-    ac.set_freq(freq_mhz, antennas, 'd')
+    att = float(atten_db)
 
-    # RF switch & attenuators for X/Y pol of each antenna
+    # RF switch matrix + attenuators
     ac.rf_switch_thread(antennas)
     ac.set_atten_thread(
-        [[f'{ant}x', f'{ant}y'] for ant in antennas],
-        [[atten_db, atten_db] for _ in antennas]
+        [[f"{ant}x", f"{ant}y"] for ant in antennas],
+        [[att, att] for ant in antennas]
     )
 
+    # Set LO and frequency
+    lo = "d"
+    ac.set_freq(freq_mhz, antennas, lo)
+
     return (
-        f"Frequency set to {freq_mhz:.6f} MHz on antennas {antennas} using LO 'd', "
-        f"attenuation = {atten_db:.1f} dB."
+        f"RF switch set for {antennas}; attenuation = {att:.1f} dB; "
+        f"frequency set to {freq_mhz:.6f} MHz on LO '{lo}'."
     )
 
 
@@ -282,6 +290,10 @@ class ATAObservationGUI:
         freq_subframe = customtkinter.CTkFrame(freq_frame)
         freq_subframe.pack(fill="x")
 
+        # New labels next to frequency and attenuation entries
+        freq_name_label = customtkinter.CTkLabel(freq_subframe, text="Freq:")
+        freq_name_label.pack(side="left", padx=(0, 5), pady=5)
+
         self.freq_entry = customtkinter.CTkEntry(
             freq_subframe,
             placeholder_text="1420.405",
@@ -291,6 +303,9 @@ class ATAObservationGUI:
 
         freq_unit_label = customtkinter.CTkLabel(freq_subframe, text="MHz")
         freq_unit_label.pack(side="left", padx=(0, 10), pady=5)
+
+        atten_name_label = customtkinter.CTkLabel(freq_subframe, text="Atten:")
+        atten_name_label.pack(side="left", padx=(0, 5), pady=5)
 
         # attenuation entry
         self.atten_entry = customtkinter.CTkEntry(
@@ -453,7 +468,7 @@ class ATAObservationGUI:
         )
         refresh_btn.pack(pady=5)
 
-        # Camera tab – *no* integrated stream, just instructions
+        # Camera tab – no integrated stream, just instructions
         camera_frame = customtkinter.CTkFrame(notebook)
         notebook.add(camera_frame, text="Camera")
 
@@ -509,8 +524,10 @@ class ATAObservationGUI:
         now_local = datetime.datetime.now(LOCAL_TZ)
         timestamp = now_local.strftime("%Y-%m-%d %H:%M:%S %Z")
         line = f"[{timestamp}] {msg}\n"
-        self.log_text.insert("end", line)
-        self.log_text.see("end")
+
+        # Insert newest log at the top
+        self.log_text.insert("1.0", line)
+        self.log_text.see("1.0")
         self.log_text.update_idletasks()
 
     def run_with_progress(self, description, func, callback=None):
