@@ -1,17 +1,30 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import customtkinter
-from tkinterweb import HtmlFrame
 
 import datetime
 import threading
-from backports.zoneinfo import ZoneInfo
+
+# Timezone handling: use stdlib zoneinfo if available, else backports
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord, AltAz, EarthLocation
 from astropy.time import Time
 
 from ATATools import ata_control as ac
+
+# Camera dependencies (OpenCV + Pillow) for MJPEG streaming
+try:
+    import cv2
+    from PIL import Image, ImageTk
+except ImportError:
+    cv2 = None
+    Image = None
+    ImageTk = None
 
 
 # ======================================================
@@ -31,18 +44,14 @@ ATA_LOCATION = EarthLocation.from_geodetic(
 # Local timezone for logs & display
 LOCAL_TZ = ZoneInfo("America/Los_Angeles")
 
-# Simple profiles: name -> center frequency in Hz (None = use manual entry)
+# Observation profiles: name -> center frequency in Hz (None = use manual entry)
 OBSERVATION_PROFILES = {
     "21cm Milky Way (1420.405 MHz)": 1420.405e6,
     "Mars @ 8431 MHz": 8431e6,
     "Custom": None,
 }
 
-# Original camera page + direct MJPEG stream
-CAMERA_PAGE_URL = (
-    "http://10.3.0.30/camera/index.html"
-    "?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1#/video"
-)
+# Direct MJPEG stream for the site camera (derived from original URL)
 CAMERA_STREAM_URL = "http://10.3.0.30/mjpg/video.mjpg"
 
 
@@ -112,20 +121,40 @@ def ata_get_status_text():
     return ac.get_ascii_status()
 
 
-def ata_set_frequency_hz(freq_hz):
+def ata_set_freq_and_atten(freq_hz, atten_db):
     """
-    Set observing frequency to freq_hz (float, Hz) and autotune.
+    Set observing frequency to freq_hz (Hz) and IF attenuation.
 
-    Uses ac.set_freq(freq_mhz, antennas, 'd') and ac.autotune(antennas).
+    Uses:
+      - ac.set_freq(freq_mhz, antennas, 'd')
+      - ac.rf_switch_thread(antennas)
+      - ac.set_atten_thread(...)
+    Does NOT call autotune (separate button handles that).
     """
     freq_mhz = freq_hz / 1e6
-    # RFCB LO 'd' as in the hydrogen-line notebook
     ac.set_freq(freq_mhz, antennas, 'd')
-    ac.autotune(antennas)
+
+    # RF switch & attenuators for X/Y pol of each antenna
+    ac.rf_switch_thread(antennas)
+    ac.set_atten_thread(
+        [[f'{ant}x', f'{ant}y'] for ant in antennas],
+        [[atten_db, atten_db] for _ in antennas]
+    )
+
     return (
         f"Frequency set to {freq_mhz:.6f} MHz on antennas {antennas} using LO 'd', "
-        "and autotuned."
+        f"attenuation = {atten_db:.1f} dB."
     )
+
+
+def ata_autotune():
+    """
+    Run autotune on the current antennas.
+
+    Uses ac.autotune(antennas).
+    """
+    ac.autotune(antennas)
+    return f"Autotune complete on antennas {antennas}."
 
 
 def ata_track_radec_degrees(ra_deg, dec_deg):
@@ -174,9 +203,9 @@ class ATAObservationGUI:
             value=list(OBSERVATION_PROFILES.keys())[0]
         )
 
-        # Camera URLs
-        self.camera_url = CAMERA_PAGE_URL
-        self.camera_stream_url = CAMERA_STREAM_URL
+        # Camera state
+        self.camera_cap = None
+        self.camera_running = False
 
         self._build_layout()
 
@@ -240,7 +269,7 @@ class ATAObservationGUI:
         )
         release_btn.pack(side="left", padx=5, pady=5)
 
-        # ---- Frequency / profile ----
+        # ---- Frequency / profile / attenuation ----
         freq_frame = customtkinter.CTkFrame(parent)
         freq_frame.pack(fill="x", pady=(5, 10))
 
@@ -259,22 +288,45 @@ class ATAObservationGUI:
         )
         profile_combo.pack(fill="x", pady=(0, 5))
 
+        # Frequency + attenuation row
         freq_subframe = customtkinter.CTkFrame(freq_frame)
         freq_subframe.pack(fill="x")
 
         self.freq_entry = customtkinter.CTkEntry(
             freq_subframe,
-            placeholder_text="Frequency [MHz]",
-            width=140
+            placeholder_text="1420.405",
+            width=100
         )
         self.freq_entry.pack(side="left", padx=(0, 5), pady=5)
 
+        freq_unit_label = customtkinter.CTkLabel(freq_subframe, text="MHz")
+        freq_unit_label.pack(side="left", padx=(0, 10), pady=5)
+
+        # NEW: attenuation entry
+        self.atten_entry = customtkinter.CTkEntry(
+            freq_subframe,
+            placeholder_text="20",
+            width=60
+        )
+        self.atten_entry.pack(side="left", padx=(0, 5), pady=5)
+
+        atten_label = customtkinter.CTkLabel(freq_subframe, text="dB")
+        atten_label.pack(side="left", padx=(0, 10), pady=5)
+
         apply_freq_btn = customtkinter.CTkButton(
             freq_subframe,
-            text="Set Frequency",
+            text="Set Freq + Atten",
             command=self.on_set_frequency_clicked
         )
         apply_freq_btn.pack(side="left", padx=5, pady=5)
+
+        # NEW: separate autotune button
+        autotune_btn = customtkinter.CTkButton(
+            freq_frame,
+            text="Autotune",
+            command=self.on_autotune_clicked
+        )
+        autotune_btn.pack(pady=(5, 0))
 
         # ---- Coordinate / pointing ----
         coord_frame = customtkinter.CTkFrame(parent)
@@ -319,7 +371,7 @@ class ATAObservationGUI:
         self.coord1_entry = customtkinter.CTkEntry(
             coord_input_frame,
             width=140,
-            placeholder_text="e.g. 12:34:56"
+            placeholder_text="12:34:56"
         )
         self.coord1_entry.grid(
             row=0, column=1, sticky="w", padx=(0, 5), pady=2
@@ -351,7 +403,7 @@ class ATAObservationGUI:
         self.name_entry = customtkinter.CTkEntry(
             coord_input_frame,
             width=180,
-            placeholder_text="e.g. 3C286"
+            placeholder_text="3C286"
         )
         self.name_entry.grid(
             row=2, column=1, sticky="w", padx=(0, 5), pady=2
@@ -382,7 +434,8 @@ class ATAObservationGUI:
         self.info_label.pack(anchor="w", pady=(5, 0))
         self._update_time_info()
 
-        self.root.after(10000, self._update_time_info)  # periodic updates
+        # Make initial pointing UI consistent with default mode
+        self.on_coord_mode_changed()
 
     def _build_right_tabs(self, parent):
         notebook = ttk.Notebook(parent)
@@ -392,7 +445,7 @@ class ATAObservationGUI:
         status_frame = customtkinter.CTkFrame(notebook)
         notebook.add(status_frame, text="Status")
 
-        # Parsed table for antenna 1a (new)
+        # Parsed table for antenna 1a
         self.status_tree = ttk.Treeview(status_frame, show="headings", height=1)
         self.status_tree.pack(fill="x", padx=5, pady=5)
 
@@ -410,12 +463,16 @@ class ATAObservationGUI:
         )
         refresh_btn.pack(pady=5)
 
-        # Camera tab
+        # Camera tab (same layout as before, but now with CTkLabel for frames)
         camera_frame = customtkinter.CTkFrame(notebook)
         notebook.add(camera_frame, text="Camera")
 
-        self.camera_html_frame = HtmlFrame(camera_frame)
-        self.camera_html_frame.pack(
+        self.camera_label = customtkinter.CTkLabel(
+            camera_frame,
+            text="Camera disconnected",
+            anchor="center"
+        )
+        self.camera_label.pack(
             fill="both", expand=True, padx=5, pady=5
         )
 
@@ -511,15 +568,17 @@ class ATAObservationGUI:
 
     def _update_time_info(self):
         """
-        Show local civil time (Pacific) and LST (sidereal).
+        Show local civil time (Pacific) and LST (Local Sidereal Time).
         """
         try:
             now_astropy = Time.now()
             lst = now_astropy.sidereal_time('apparent', longitude=ATA_LOCATION.lon)
             local_now = datetime.datetime.now(LOCAL_TZ)
             text = (
-                f"Local time: {local_now.strftime('%Y-%m-%d %H:%M:%S %Z')}   |   "
-                f"LST (sidereal): {lst.to_string(unit=u.hour, sep=':', precision=0, pad=True)}"
+                f"Local time (America/Los_Angeles): "
+                f"{local_now.strftime('%Y-%m-%d %H:%M:%S %Z')}   |   "
+                f"LST (Local Sidereal Time): "
+                f"{lst.to_string(unit=u.hour, sep=':', precision=0, pad=True)}"
             )
         except Exception as e:
             text = f"Time error: {e}"
@@ -539,7 +598,7 @@ class ATAObservationGUI:
     def on_release_clicked(self):
         self.run_with_progress("Releasing antennas", ata_release_antennas)
 
-    # ---------- Callbacks: Frequency / profiles ----------
+    # ---------- Callbacks: Frequency / profiles / attenuation ----------
 
     def on_profile_changed(self, *_):
         profile = self.selected_profile.get()
@@ -564,33 +623,67 @@ class ATAObservationGUI:
             )
             return
 
+        atten_text = self.atten_entry.get().strip() or "20"
+        try:
+            atten_db = float(atten_text)
+        except ValueError:
+            messagebox.showerror(
+                "Invalid attenuation",
+                f"Could not parse attenuation '{atten_text}' as a number."
+            )
+            return
+
         freq_hz = freq_mhz * 1e6
 
-        def do_set_freq():
-            return ata_set_frequency_hz(freq_hz)
+        def do_set():
+            return ata_set_freq_and_atten(freq_hz, atten_db)
 
         self.run_with_progress(
-            f"Setting frequency to {freq_mhz:.6f} MHz",
-            do_set_freq
+            f"Setting frequency to {freq_mhz:.6f} MHz and attenuation {atten_db:.1f} dB",
+            do_set
         )
+
+    def on_autotune_clicked(self):
+        self.run_with_progress("Autotuning", ata_autotune)
 
     # ---------- Callbacks: Coordinate modes ----------
 
     def on_coord_mode_changed(self):
         mode = self.coord_mode.get()
+
+        # Default: hide source-name input; show coord entries.
         if mode == "radec":
             self.coord1_label.configure(text="RA (h:m:s)")
             self.coord2_label.configure(text="Dec (d:m:s)")
+            self.coord1_entry.configure(placeholder_text="12:34:56")
+            self.coord2_entry.configure(placeholder_text="+12:34:56")
+            self.name_label.grid_remove()
+            self.name_entry.grid_remove()
+
         elif mode == "altaz":
             self.coord1_label.configure(text="Alt (deg)")
             self.coord2_label.configure(text="Az (deg)")
+            self.coord1_entry.configure(placeholder_text="45.0")
+            self.coord2_entry.configure(placeholder_text="180.0")
+            self.name_label.grid_remove()
+            self.name_entry.grid_remove()
+
         elif mode == "galactic":
             self.coord1_label.configure(text="l (deg)")
             self.coord2_label.configure(text="b (deg)")
+            self.coord1_entry.configure(placeholder_text="120.0")
+            self.coord2_entry.configure(placeholder_text="-5.0")
+            self.name_label.grid_remove()
+            self.name_entry.grid_remove()
+
         elif mode == "name":
-            # For name mode, RA/Dec fields are not required; they can be left as-is
-            self.coord1_label.configure(text="RA (h:m:s)")
-            self.coord2_label.configure(text="Dec (d:m:s)")
+            # Only show the source-name entry; RA/Dec fields are unused.
+            self.coord1_label.configure(text="(unused)")
+            self.coord2_label.configure(text="(unused)")
+            self.coord1_entry.configure(placeholder_text="")
+            self.coord2_entry.configure(placeholder_text="")
+            self.name_label.grid(row=2, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.name_entry.grid(row=2, column=1, sticky="w", padx=(0, 5), pady=2)
 
     def on_track_clicked(self):
         mode = self.coord_mode.get()
@@ -598,7 +691,7 @@ class ATAObservationGUI:
         coord2 = self.coord2_entry.get().strip()
         name = self.name_entry.get().strip()
 
-        # --- NEW: Source-name mode uses ATA catalog directly ---
+        # Source-name mode: use ATA catalog directly, no RA/Dec required
         if mode == "name":
             if not name:
                 messagebox.showerror(
@@ -657,10 +750,7 @@ class ATAObservationGUI:
         dec_deg = c.dec.deg
 
         def do_track():
-            msg = ata_track_radec_degrees(ra_deg, dec_deg)
-            if name:
-                return f"{msg} (Source name field: {name})"
-            return msg
+            return ata_track_radec_degrees(ra_deg, dec_deg)
 
         self.run_with_progress(
             f"Tracking RA={c.ra.to_string(unit=u.hour, sep=':')}, "
@@ -671,7 +761,7 @@ class ATAObservationGUI:
     def on_stop_tracking_clicked(self):
         self.run_with_progress("Stopping tracking", ata_stop_tracking)
 
-    # ---------- Callbacks: Status / Camera ----------
+    # ---------- Callbacks: Status ----------
 
     def on_refresh_status_clicked(self):
         def do_status():
@@ -681,7 +771,7 @@ class ATAObservationGUI:
             if not isinstance(text, str):
                 return
 
-            # Show full status in text box
+            # Full status in text box
             self.status_text.delete("1.0", tk.END)
             self.status_text.insert("1.0", text)
 
@@ -698,7 +788,9 @@ class ATAObservationGUI:
                     self.status_tree.column(col, width=80, anchor="center")
                 self.status_tree.insert("", "end", values=row_tokens)
 
-        self.run_with_progress("Refreshing ATA status", do_status, callback=update_status)
+        self.run_with_progress(
+            "Refreshing ATA status", do_status, callback=update_status
+        )
 
     @staticmethod
     def _parse_ascii_status_for_antenna(ascii_status: str, antenna: str):
@@ -741,36 +833,72 @@ class ATAObservationGUI:
 
         return None, None
 
+    # ---------- Camera (MJPEG via OpenCV) ----------
+
     def on_camera_connect_clicked(self):
-        """
-        Instead of loading the complex camera page (which may rely on JS),
-        embed a simple <img> pointing directly at the MJPEG stream.
-        """
-        try:
-            html = f"""
-            <html>
-              <body style="margin:0; padding:0; background-color:black;">
-                <img src="{self.camera_stream_url}" style="width:100%; height:auto;" />
-              </body>
-            </html>
-            """
-            self.camera_html_frame.load_html(html)
-            self.log("Camera connected via MJPEG stream.")
-        except Exception as e:
+        if cv2 is None or ImageTk is None:
+            messagebox.showerror(
+                "Camera dependencies missing",
+                "OpenCV (cv2) and Pillow must be installed to use the embedded camera view."
+            )
+            self.log("Camera connection failed: missing OpenCV/Pillow.")
+            return
+
+        if self.camera_running:
+            return  # already running
+
+        self.log("Connecting to site camera...")
+        cap = cv2.VideoCapture(CAMERA_STREAM_URL)
+        if not cap.isOpened():
+            self.log("Failed to open camera MJPEG stream.")
             messagebox.showerror(
                 "Camera error",
-                f"Failed to load camera stream:\n{e}"
+                f"Could not open MJPEG stream at {CAMERA_STREAM_URL}."
             )
-            self.log(f"Camera connection failed: {e}")
+            return
+
+        self.camera_cap = cap
+        self.camera_running = True
+        self.camera_label.configure(text="")
+
+        self._camera_loop()
+
+    def _camera_loop(self):
+        if not self.camera_running or self.camera_cap is None:
+            return
+
+        ret, frame = self.camera_cap.read()
+        if not ret:
+            # try again shortly without spamming logs
+            self.root.after(500, self._camera_loop)
+            return
+
+        # Convert BGR -> RGB and display in the label
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(frame_rgb)
+
+        # Resize to label size (or a default)
+        w = self.camera_label.winfo_width() or 640
+        h = self.camera_label.winfo_height() or 360
+        img = img.resize((w, h))
+
+        photo = ImageTk.PhotoImage(img)
+        self.camera_label.image = photo
+        self.camera_label.configure(image=photo)
+
+        # Schedule next frame
+        self.root.after(100, self._camera_loop)
 
     def on_camera_disconnect_clicked(self):
-        try:
-            self.camera_html_frame.load_html(
-                "<html><body><h3 style='color:white; background:black;'>Camera disconnected.</h3></body></html>"
-            )
-            self.log("Camera disconnected.")
-        except Exception as e:
-            self.log(f"Camera disconnect failed: {e}")
+        if not self.camera_running:
+            return
+        self.camera_running = False
+        if self.camera_cap is not None:
+            self.camera_cap.release()
+            self.camera_cap = None
+        self.camera_label.configure(text="Camera disconnected", image="")
+        self.camera_label.image = None
+        self.log("Camera disconnected.")
 
 
 # ======================================================
