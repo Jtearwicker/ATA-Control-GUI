@@ -17,15 +17,6 @@ from astropy.time import Time
 
 from ATATools import ata_control as ac
 
-# Camera dependencies (OpenCV + Pillow) for MJPEG streaming
-try:
-    import cv2
-    from PIL import Image, ImageTk
-except ImportError:
-    cv2 = None
-    Image = None
-    ImageTk = None
-
 
 # ======================================================
 # CONFIG / GLOBALS
@@ -51,8 +42,11 @@ OBSERVATION_PROFILES = {
     "Custom": None,
 }
 
-# Direct MJPEG stream for the site camera (derived from original URL)
-CAMERA_STREAM_URL = "http://10.3.0.30/mjpg/video.mjpg"
+# Original camera page URL for external browser use
+CAMERA_PAGE_URL = (
+    "http://10.3.0.30/camera/index.html"
+    "?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1#/video"
+)
 
 
 # ======================================================
@@ -203,10 +197,6 @@ class ATAObservationGUI:
             value=list(OBSERVATION_PROFILES.keys())[0]
         )
 
-        # Camera state
-        self.camera_cap = None
-        self.camera_running = False
-
         self._build_layout()
 
     # ---------- Layout ----------
@@ -302,7 +292,7 @@ class ATAObservationGUI:
         freq_unit_label = customtkinter.CTkLabel(freq_subframe, text="MHz")
         freq_unit_label.pack(side="left", padx=(0, 10), pady=5)
 
-        # NEW: attenuation entry
+        # attenuation entry
         self.atten_entry = customtkinter.CTkEntry(
             freq_subframe,
             placeholder_text="20",
@@ -320,7 +310,7 @@ class ATAObservationGUI:
         )
         apply_freq_btn.pack(side="left", padx=5, pady=5)
 
-        # NEW: separate autotune button
+        # separate autotune button
         autotune_btn = customtkinter.CTkButton(
             freq_frame,
             text="Autotune",
@@ -463,14 +453,19 @@ class ATAObservationGUI:
         )
         refresh_btn.pack(pady=5)
 
-        # Camera tab (same layout as before, but now with CTkLabel for frames)
+        # Camera tab – *no* integrated stream, just instructions
         camera_frame = customtkinter.CTkFrame(notebook)
         notebook.add(camera_frame, text="Camera")
 
         self.camera_label = customtkinter.CTkLabel(
             camera_frame,
-            text="Camera disconnected",
-            anchor="center"
+            text=(
+                "Integrated camera stream disabled in this GUI.\n\n"
+                "Use an external browser on a host that can see the camera:\n"
+                f"{CAMERA_PAGE_URL}"
+            ),
+            anchor="center",
+            justify="center"
         )
         self.camera_label.pack(
             fill="both", expand=True, padx=5, pady=5
@@ -481,17 +476,10 @@ class ATAObservationGUI:
 
         connect_btn = customtkinter.CTkButton(
             camera_button_frame,
-            text="Connect camera",
-            command=self.on_camera_connect_clicked
+            text="Copy camera URL",
+            command=self.on_camera_copy_url_clicked
         )
         connect_btn.pack(side="left", padx=5, pady=5)
-
-        disconnect_btn = customtkinter.CTkButton(
-            camera_button_frame,
-            text="Disconnect camera",
-            command=self.on_camera_disconnect_clicked
-        )
-        disconnect_btn.pack(side="left", padx=5, pady=5)
 
     def _build_log_area(self, parent):
         # Progress indicator + status line
@@ -833,72 +821,23 @@ class ATAObservationGUI:
 
         return None, None
 
-    # ---------- Camera (MJPEG via OpenCV) ----------
+    # ---------- Camera: no integrated stream ----------
 
-    def on_camera_connect_clicked(self):
-        if cv2 is None or ImageTk is None:
-            messagebox.showerror(
-                "Camera dependencies missing",
-                "OpenCV (cv2) and Pillow must be installed to use the embedded camera view."
+    def on_camera_copy_url_clicked(self):
+        try:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(CAMERA_PAGE_URL)
+            self.log(f"Camera URL copied to clipboard: {CAMERA_PAGE_URL}")
+            messagebox.showinfo(
+                "Camera URL copied",
+                f"The camera URL has been copied to the clipboard:\n\n{CAMERA_PAGE_URL}"
             )
-            self.log("Camera connection failed: missing OpenCV/Pillow.")
-            return
-
-        if self.camera_running:
-            return  # already running
-
-        self.log("Connecting to site camera...")
-        cap = cv2.VideoCapture(CAMERA_STREAM_URL)
-        if not cap.isOpened():
-            self.log("Failed to open camera MJPEG stream.")
+        except Exception as e:
+            self.log(f"Failed to copy camera URL: {e}")
             messagebox.showerror(
-                "Camera error",
-                f"Could not open MJPEG stream at {CAMERA_STREAM_URL}."
+                "Clipboard error",
+                f"Failed to copy camera URL:\n{e}"
             )
-            return
-
-        self.camera_cap = cap
-        self.camera_running = True
-        self.camera_label.configure(text="")
-
-        self._camera_loop()
-
-    def _camera_loop(self):
-        if not self.camera_running or self.camera_cap is None:
-            return
-
-        ret, frame = self.camera_cap.read()
-        if not ret:
-            # try again shortly without spamming logs
-            self.root.after(500, self._camera_loop)
-            return
-
-        # Convert BGR -> RGB and display in the label
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        img = Image.fromarray(frame_rgb)
-
-        # Resize to label size (or a default)
-        w = self.camera_label.winfo_width() or 640
-        h = self.camera_label.winfo_height() or 360
-        img = img.resize((w, h))
-
-        photo = ImageTk.PhotoImage(img)
-        self.camera_label.image = photo
-        self.camera_label.configure(image=photo)
-
-        # Schedule next frame
-        self.root.after(100, self._camera_loop)
-
-    def on_camera_disconnect_clicked(self):
-        if not self.camera_running:
-            return
-        self.camera_running = False
-        if self.camera_cap is not None:
-            self.camera_cap.release()
-            self.camera_cap = None
-        self.camera_label.configure(text="Camera disconnected", image="")
-        self.camera_label.image = None
-        self.log("Camera disconnected.")
 
 
 # ======================================================
