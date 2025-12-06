@@ -4,6 +4,7 @@ import customtkinter
 
 import datetime
 import threading
+import numpy as np  # NEW: for rise/set time sampling
 
 # Timezone handling: use stdlib zoneinfo if available, else backports
 try:
@@ -47,6 +48,64 @@ CAMERA_PAGE_URL = (
     "http://10.3.0.30/camera/index.html"
     "?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1#/video"
 )
+
+
+# ======================================================
+# ASTRO UTILS
+# ======================================================
+
+def compute_altitude_and_rise_set(coord, location, horizon_deg=18.0, n_steps=240):
+    """
+    Given an ICRS SkyCoord, compute:
+      - current altitude (deg)
+      - whether it's currently above `horizon_deg`
+      - approximate next rise and set times (crossings of horizon_deg)
+        within the next 24 hours, using a simple sampling approach.
+
+    Returns: (alt_now_deg, is_up, rise_time, set_time)
+      alt_now_deg : float
+      is_up       : bool
+      rise_time   : astropy.time.Time or None
+      set_time    : astropy.time.Time or None
+    """
+    now = Time.now()
+
+    # Altitude now
+    altaz_now = coord.transform_to(AltAz(obstime=now, location=location))
+    alt_now_deg = altaz_now.alt.deg
+    is_up = alt_now_deg >= horizon_deg
+
+    # Sample altitudes over next 24 hours
+    hours = np.linspace(0.0, 24.0, n_steps)
+    times = now + hours * u.hour
+    altaz_grid = coord.transform_to(AltAz(obstime=times, location=location))
+    alt_grid = altaz_grid.alt.deg
+
+    diff = alt_grid - horizon_deg
+    rise_time = None
+    set_time = None
+
+    for i in range(len(times) - 1):
+        d1 = diff[i]
+        d2 = diff[i + 1]
+        if d1 == 0:
+            continue
+
+        # Crossing from below to above -> rise
+        if d1 < 0 and d2 > 0:
+            frac = (horizon_deg - alt_grid[i]) / (alt_grid[i + 1] - alt_grid[i])
+            t_cross = times[i] + frac * (times[i + 1] - times[i])
+            if rise_time is None:
+                rise_time = t_cross
+
+        # Crossing from above to below -> set
+        elif d1 > 0 and d2 < 0:
+            frac = (horizon_deg - alt_grid[i]) / (alt_grid[i + 1] - alt_grid[i])
+            t_cross = times[i] + frac * (times[i + 1] - times[i])
+            if set_time is None:
+                set_time = t_cross
+
+    return alt_now_deg, is_up, rise_time, set_time
 
 
 # ======================================================
@@ -383,6 +442,16 @@ class ATAObservationGUI:
             row=2, column=1, sticky="w", padx=(0, 5), pady=2
         )
 
+        # NEW: Check source location button, to the right of coord entries
+        self.check_source_btn = customtkinter.CTkButton(
+            coord_input_frame,
+            text="Check source location",
+            command=self.on_check_source_location_clicked
+        )
+        self.check_source_btn.grid(
+            row=0, column=2, rowspan=3, padx=(10, 0), pady=2, sticky="ns"
+        )
+
         # Track / stop buttons
         track_button_frame = customtkinter.CTkFrame(coord_frame)
         track_button_frame.pack(fill="x", pady=(5, 0))
@@ -638,8 +707,8 @@ class ATAObservationGUI:
             self.coord2_label.grid(row=1, column=0, sticky="w", padx=(0, 5), pady=2)
             self.coord2_entry.grid(row=1, column=1, sticky="w", padx=(0, 5), pady=2)
             # Hide source-name row
-            self.name_label.grid_remove()
-            self.name_entry.grid_remove()
+            self.name_label.grid(row=2, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.name_entry.grid(row=2, column=1, sticky="w", padx=(0, 5), pady=2)
 
             self.coord1_label.configure(text="RA (h:m:s)")
             self.coord2_label.configure(text="Dec (d:m:s)")
@@ -651,8 +720,8 @@ class ATAObservationGUI:
             self.coord1_entry.grid(row=0, column=1, sticky="w", padx=(0, 5), pady=2)
             self.coord2_label.grid(row=1, column=0, sticky="w", padx=(0, 5), pady=2)
             self.coord2_entry.grid(row=1, column=1, sticky="w", padx=(0, 5), pady=2)
-            self.name_label.grid_remove()
-            self.name_entry.grid_remove()
+            self.name_label.grid(row=2, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.name_entry.grid(row=2, column=1, sticky="w", padx=(0, 5), pady=2)
 
             self.coord1_label.configure(text="Alt (deg)")
             self.coord2_label.configure(text="Az (deg)")
@@ -664,8 +733,8 @@ class ATAObservationGUI:
             self.coord1_entry.grid(row=0, column=1, sticky="w", padx=(0, 5), pady=2)
             self.coord2_label.grid(row=1, column=0, sticky="w", padx=(0, 5), pady=2)
             self.coord2_entry.grid(row=1, column=1, sticky="w", padx=(0, 5), pady=2)
-            self.name_label.grid_remove()
-            self.name_entry.grid_remove()
+            self.name_label.grid(row=2, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.name_entry.grid(row=2, column=1, sticky="w", padx=(0, 5), pady=2)
 
             self.coord1_label.configure(text="l (deg)")
             self.coord2_label.configure(text="b (deg)")
@@ -694,6 +763,139 @@ class ATAObservationGUI:
             pass
 
         self.last_coord_mode = new_mode
+
+    def _resolve_target_for_visibility(self, mode, coord1, coord2, name):
+        """
+        Resolve the user inputs into an ICRS SkyCoord plus a human-readable label.
+        Used by the 'Check source location' feature.
+        """
+        if mode == "name":
+            if not name:
+                raise ValueError("Please enter a source name to look up.")
+            # This uses Astropy's name resolver (Simbad, etc.)
+            c = SkyCoord.from_name(name)
+            label = f"Source '{name}'"
+            return c.icrs, label
+
+        if mode == "radec":
+            if not coord1 or not coord2:
+                raise ValueError("RA and Dec are required.")
+            c = SkyCoord(
+                coord1, coord2,
+                unit=(u.hourangle, u.deg),
+                frame="icrs"
+            )
+            label = f"RA={coord1}, Dec={coord2}"
+            return c.icrs, label
+
+        if mode == "altaz":
+            if not coord1 or not coord2:
+                raise ValueError("Alt and Az are required.")
+            alt = float(coord1)
+            az = float(coord2)
+            now = Time.now()
+            altaz = AltAz(
+                obstime=now,
+                location=ATA_LOCATION,
+                alt=alt * u.deg,
+                az=az * u.deg
+            )
+            c = altaz.transform_to("icrs")
+            label = f"Alt={alt} deg, Az={az} deg"
+            return c.icrs, label
+
+        if mode == "galactic":
+            if not coord1 or not coord2:
+                raise ValueError("l and b are required.")
+            l = float(coord1)
+            b = float(coord2)
+            c = SkyCoord(
+                l=l * u.deg, b=b * u.deg, frame="galactic"
+            ).transform_to("icrs")
+            label = f"l={l} deg, b={b} deg"
+            return c.icrs, label
+
+        raise ValueError(f"Unknown coordinate mode '{mode}'.")
+
+    def on_check_source_location_clicked(self):
+        """
+        Check whether the current coordinates / source name are up,
+        and compute approximate rise/set times (above 18°).
+        """
+        mode = self.coord_mode.get()
+        coord1 = self.coord1_entry.get().strip()
+        coord2 = self.coord2_entry.get().strip()
+        name = self.name_entry.get().strip()
+
+        try:
+            coord_icrs, label = self._resolve_target_for_visibility(
+                mode, coord1, coord2, name
+            )
+        except ValueError as e:
+            messagebox.showerror("Coordinate error", str(e))
+            return
+        except Exception as e:
+            messagebox.showerror(
+                "Coordinate error",
+                f"Could not interpret coordinates or resolve source:\n{e}"
+            )
+            return
+
+        def do_check():
+            alt_now_deg, is_up, rise_time, set_time = compute_altitude_and_rise_set(
+                coord_icrs, ATA_LOCATION, horizon_deg=18.0
+            )
+            lines = []
+            lines.append(f"{label}: Elevation now = {alt_now_deg:.2f} deg")
+
+            if is_up:
+                lines.append(f"{label} is UP (above 18°).")
+            else:
+                lines.append(f"{label} is NOT up (below 18°).")
+
+            # Rise time message
+            if rise_time is not None:
+                rt_local = rise_time.to_datetime(timezone=LOCAL_TZ)
+                lines.append(
+                    f"Next rise above 18°: "
+                    f"{rt_local.strftime('%Y-%m-%d %H:%M:%S %Z')}"
+                )
+            else:
+                if is_up:
+                    lines.append(
+                        "No next rise above 18° in the next 24 hours "
+                        "(source already above threshold for this window)."
+                    )
+                else:
+                    lines.append(
+                        "No rise above 18° in the next 24 hours "
+                        "(source stays below threshold)."
+                    )
+
+            # Set time message
+            if set_time is not None:
+                st_local = set_time.to_datetime(timezone=LOCAL_TZ)
+                lines.append(
+                    f"Next set below 18°: "
+                    f"{st_local.strftime('%Y-%m-%d %H:%M:%S %Z')}"
+                )
+            else:
+                if is_up:
+                    lines.append(
+                        "No set below 18° in the next 24 hours "
+                        "(source stays above threshold)."
+                    )
+                else:
+                    lines.append(
+                        "No next set below 18° in the next 24 hours "
+                        "(source already below threshold for this window)."
+                    )
+
+            return lines
+
+        self.run_with_progress(
+            f"Checking source visibility for {label}", do_check
+        )
 
     def on_track_clicked(self):
         mode = self.coord_mode.get()
