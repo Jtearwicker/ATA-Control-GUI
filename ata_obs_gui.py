@@ -4,6 +4,7 @@ import customtkinter
 
 import datetime
 import threading
+import subprocess
 import numpy as np  # for rise/set sampling
 
 # Timezone handling: use stdlib zoneinfo if available, else backports
@@ -118,7 +119,7 @@ def compute_altitude_and_rise_set(coord, location, horizon_deg=18.0, n_steps=240
 
 
 # ======================================================
-# ATA CONTROL WRAPPERS
+# ATA / USRP CONTROL WRAPPERS
 # ======================================================
 
 def ata_reserve_antennas():
@@ -219,6 +220,53 @@ def ata_track_radec_degrees(ra_deg, dec_deg):
     )
 
 
+def usrp_check_levels():
+    """
+    Run 'usrp_test.py' and return only the channel level lines and the note.
+
+    Expected interesting lines:
+        Channel 0 level -16.19 dB
+        ...
+        Note: channel levels should be around -16 dB in this test
+    """
+    proc = subprocess.run(
+        ["usrp_test.py"],
+        text=True,
+        capture_output=True,
+        check=True
+    )
+    lines = proc.stdout.splitlines()
+    filtered = [
+        line for line in lines
+        if line.startswith("Channel ") or line.startswith("Note:")
+    ]
+    if not filtered:
+        filtered = ["usrp_test.py completed, but no channel-level lines were found."]
+    return filtered
+
+
+def usrp_reset_clocking():
+    """
+    Run 'usrp_reset_clocking.py' and apply the same filtering logic:
+    log only 'Channel ...' and 'Note: ...' lines if present; otherwise
+    log a generic completion line.
+    """
+    proc = subprocess.run(
+        ["usrp_reset_clocking.py"],
+        text=True,
+        capture_output=True,
+        check=True
+    )
+    lines = proc.stdout.splitlines()
+    filtered = [
+        line for line in lines
+        if line.startswith("Channel ") or line.startswith("Note:")
+    ]
+    if not filtered:
+        filtered = ["usrp_reset_clocking.py completed."]
+    return filtered
+
+
 # ======================================================
 # GUI
 # ======================================================
@@ -293,7 +341,12 @@ class ATAObservationGUI:
         button_frame = customtkinter.CTkFrame(parent)
         button_frame.pack(fill="x", pady=(0, 10))
 
-        # New: antenna selection dropdown (for now only '1a')
+        # Label + antenna selection dropdown
+        antenna_select_label = customtkinter.CTkLabel(
+            button_frame, text="Select Antenna(s)"
+        )
+        antenna_select_label.pack(side="left", padx=(0, 5), pady=5)
+
         antenna_select = customtkinter.CTkComboBox(
             button_frame,
             values=AVAILABLE_ANTENNAS,
@@ -316,6 +369,34 @@ class ATAObservationGUI:
             command=self.on_release_clicked
         )
         release_btn.pack(side="left", padx=5, pady=5)
+
+        # ---- USRP backend control ----
+        usrp_frame = customtkinter.CTkFrame(parent)
+        usrp_frame.pack(fill="x", pady=(0, 10))
+
+        usrp_label = customtkinter.CTkLabel(
+            usrp_frame,
+            text="USRP Backend",
+            font=("Arial", 16, "bold")
+        )
+        usrp_label.pack(anchor="w", pady=(5, 5))
+
+        usrp_btn_frame = customtkinter.CTkFrame(usrp_frame)
+        usrp_btn_frame.pack(fill="x", pady=(0, 5))
+
+        usrp_test_btn = customtkinter.CTkButton(
+            usrp_btn_frame,
+            text="Check channel levels",
+            command=self.on_usrp_check_clicked
+        )
+        usrp_test_btn.pack(side="left", padx=5, pady=5)
+
+        usrp_reset_btn = customtkinter.CTkButton(
+            usrp_btn_frame,
+            text="Reset channel clocking",
+            command=self.on_usrp_reset_clicked
+        )
+        usrp_reset_btn.pack(side="left", padx=5, pady=5)
 
         # ---- Frequency / profile ----
         freq_frame = customtkinter.CTkFrame(parent)
@@ -671,6 +752,26 @@ class ATAObservationGUI:
 
     def on_release_clicked(self):
         self.run_with_progress("Releasing antennas", ata_release_antennas)
+
+    # ---------- Callbacks: USRP backend ----------
+
+    def on_usrp_check_clicked(self):
+        def do_check():
+            return usrp_check_levels()
+
+        self.run_with_progress(
+            "Checking USRP channel levels",
+            do_check
+        )
+
+    def on_usrp_reset_clicked(self):
+        def do_reset():
+            return usrp_reset_clocking()
+
+        self.run_with_progress(
+            "Resetting USRP clocking / channel levels",
+            do_reset
+        )
 
     # ---------- Callbacks: Frequency / profiles ----------
 
