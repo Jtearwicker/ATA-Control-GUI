@@ -132,14 +132,12 @@ def ata_set_freq_and_atten(freq_mhz, atten_db):
 
     # RF switch matrix + attenuators
     ac.rf_switch_thread(antennas)
-    ac.set_atten_thread(
-        [[f"{ant}x", f"{ant}y"] for ant in antennas],
-        [[att, att] for ant in antennas]
-    )
+    ac.set_atten_thread([[f"{ant}x", f"{ant}y"] for ant in antennas], [[att, att] for ant in antennas])
 
     # Set LO and frequency in MHz
+    freq = freq_mhz
     lo = "d"
-    ac.set_freq(freq_mhz, antennas, lo)
+    ac.set_freq(freq, antennas, lo)
 
     return (
         f"RF switch set for {antennas}; attenuation = {att:.1f} dB; "
