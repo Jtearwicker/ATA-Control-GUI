@@ -115,9 +115,9 @@ def ata_get_status_text():
     return ac.get_ascii_status()
 
 
-def ata_set_freq_and_atten(freq_hz, atten_db):
+def ata_set_freq_and_atten(freq_mhz, atten_db):
     """
-    Set observing frequency to freq_hz (Hz) and IF attenuation, using the
+    Set observing frequency to freq_mhz (MHz) and IF attenuation, using the
     same protocol as the ATA control notebook:
 
         att = 20  # dB
@@ -128,8 +128,6 @@ def ata_set_freq_and_atten(freq_hz, atten_db):
         lo = 'd'
         ac.set_freq(freq, antennas, lo)
     """
-    # Convert from Hz (GUI) to MHz (ATATools API)
-    freq_mhz = freq_hz / 1e6
     att = float(atten_db)
 
     # RF switch matrix + attenuators
@@ -139,7 +137,7 @@ def ata_set_freq_and_atten(freq_hz, atten_db):
         [[att, att] for ant in antennas]
     )
 
-    # Set LO and frequency
+    # Set LO and frequency in MHz
     lo = "d"
     ac.set_freq(freq_mhz, antennas, lo)
 
@@ -290,7 +288,7 @@ class ATAObservationGUI:
         freq_subframe = customtkinter.CTkFrame(freq_frame)
         freq_subframe.pack(fill="x")
 
-        # New labels next to frequency and attenuation entries
+        # Labels next to frequency and attenuation entries
         freq_name_label = customtkinter.CTkLabel(freq_subframe, text="Freq:")
         freq_name_label.pack(side="left", padx=(0, 5), pady=5)
 
@@ -638,10 +636,8 @@ class ATAObservationGUI:
             )
             return
 
-        freq_hz = freq_mhz * 1e6
-
         def do_set():
-            return ata_set_freq_and_atten(freq_hz, atten_db)
+            return ata_set_freq_and_atten(freq_mhz, atten_db)
 
         self.run_with_progress(
             f"Setting frequency to {freq_mhz:.6f} MHz and attenuation {atten_db:.1f} dB",
