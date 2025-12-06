@@ -230,7 +230,7 @@ def usrp_check_levels():
         Note: channel levels should be around -16 dB in this test
     """
     proc = subprocess.run(
-        ["usrp_test.py"],
+        ["python", "usrp_test.py"],
         text=True,
         capture_output=True,
         check=True
@@ -252,7 +252,7 @@ def usrp_reset_clocking():
     log a generic completion line.
     """
     proc = subprocess.run(
-        ["usrp_reset_clocking.py"],
+        ["python", "usrp_reset_clocking.py"],
         text=True,
         capture_output=True,
         check=True
