@@ -1,675 +1,668 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
-import customtkinter
-from tkinterweb import HtmlFrame
-
 import datetime
 import threading
+import tkinter as tk
+from tkinter import ttk, messagebox
 
+# Third-party libs used at the ATA
+try:
+    import customtkinter as ctk
+except ImportError:  # Fallback so the file can at least be imported elsewhere
+    ctk = None
+
+try:
+    from ATATools import ata_control as ac
+except ImportError:
+    ac = None  # At the ATA this must import correctly
+
+import pytz
 import astropy.units as u
-from astropy.coordinates import SkyCoord, AltAz, EarthLocation
+from astropy.coordinates import SkyCoord, Galactic
 from astropy.time import Time
 
-from ATATools import ata_control as ac
+# Optional camera dependencies (used for MJPEG streaming)
+try:
+    import cv2
+    from PIL import Image, ImageTk
+except ImportError:
+    cv2 = None
+    Image = None
+    ImageTk = None
+
+# ---- Constants ----
+
+# Hat Creek / ATA location (from HCRO / ATA coordinates)
+ATA_LOCATION = (40.8178, -121.473, 986.0)  # lat [deg], lon [deg], height [m]
+
+# Local civil timezone for log timestamps and display
+LOCAL_TZ = pytz.timezone("America/Los_Angeles")
+
+# Direct MJPEG stream for the site camera, derived from the HTML URL you sent
+CAMERA_MJPEG_URL = "http://10.3.0.30/mjpg/video.mjpg"
 
 
-# CONFIG / GLOBALS
-
-antennas = ['1a']
-
-ATA_LOCATION = EarthLocation.from_geodetic(
-    lon=-121.47 * u.deg,
-    lat=40.82 * u.deg,
-    height=986 * u.m
-)
-
-# Simple profiles: name -> center frequency in Hz (None = use manual entry)
-OBSERVATION_PROFILES = {
-    "21cm Milky Way (1420.405 MHz)": 1420.405e6,
-    "Mars @ 8431 MHz": 8431e6,
-    "Custom": None,
-}
-
-# HCRO live camera URL
-CAMERA_URL = (
-    "http://10.3.0.30/camera/index.html"
-    "?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1#/video"
-)
-
-
-# ======================================================
-# ATA CONTROL WRAPPERS
-# ======================================================
-
-def ata_reserve_antennas():
-    
-    # Reserve antennas into group 'atagr' if they are free.
-
-    # Check if already reserved in 'atagr'
-    atagr_list = str(ac.list_antenna_group('atagr'))
-    already_in_atagr = all(ant in atagr_list for ant in antennas)
-    if already_in_atagr:
-        return f"WARNING: {antennas} already reserved in group 'atagr'."
-
-    # Check if in 'none' group (free)
-    none_list = str(ac.list_antenna_group('none'))
-    all_in_none = all(ant in none_list for ant in antennas)
-    if not all_in_none:
-        return (
-            f"WARNING: Some antennas {antennas} are not in 'none' group. "
-            "Cannot safely move to 'atagr'."
-        )
-
-    ac.move_ant_group(antennas, 'none', 'atagr')
-    return f"Antennas {antennas} moved from 'none' to 'atagr' (reserved)."
-
-
-def ata_park_antennas():
-
-    # Park the antennas.
-
-    ac.park_antennas(antennas)
-    return f"Antennas {antennas} parked."
-
-
-def ata_release_antennas():
-
-    # Release antennas from 'atagr' back to 'none'.
-
-    # If already in 'none', do nothing
-    none_list = str(ac.list_antenna_group('none'))
-    all_in_none = all(ant in none_list for ant in antennas)
-    if all_in_none:
-        return f"Antennas {antennas} already in group 'none' (released)."
-
-    # Otherwise, move from 'atagr' to 'none'
-    ac.move_ant_group(antennas, 'atagr', 'none')
-    return f"Antennas {antennas} moved from 'atagr' to 'none' (released)."
-
-
-def ata_get_status_text():
-    """
-    Return a multi-line string describing current ATA status.
-
-    Uses ac.get_ascii_status().
-    """
-    return ac.get_ascii_status()
-
-
-def ata_set_frequency_hz(freq_hz):
-    """
-    Set observing frequency to freq_hz (float, Hz) and autotune.
-
-    Uses ac.set_freq(freq_mhz, antennas, 'd') and ac.autotune(antennas).
-    """
-    freq_mhz = freq_hz / 1e6
-    # RFCB LO 'd' as in the hydrogen-line notebook
-    ac.set_freq(freq_mhz, antennas, 'd')
-    ac.autotune(antennas)
-    return (
-        f"Frequency set to {freq_mhz:.6f} MHz on antennas {antennas} using LO 'd', "
-        "and autotuned."
-    )
-
-
-def ata_track_radec_degrees(ra_deg, dec_deg):
-    """
-    Start tracking RA/Dec (degrees) with the ATA.
-
-    Uses ac.track_source(antennas, radec=[ra_hours, dec_deg]).
-    """
-    ra_hours = ra_deg / 15.0
-    ac.track_source(antennas, radec=[ra_hours, dec_deg])
-    return (
-        f"Tracking RA = {ra_hours:.6f} h, Dec = {dec_deg:.6f} deg "
-        f"on antennas {antennas}."
-    )
-
-
-def ata_stop_tracking():
-    """
-    There is no explicit 'stop tracking' in the notebook examples.
-
-    For now, this is a no-op with a log message to keep behavior explicit.
-    If you later define a proper stop command, wire it here.
-    """
-    return "No explicit stop-tracking command defined; use 'Park' to stop motion."
-
-
-# ======================================================
-# GUI
-# ======================================================
-
-class ATAObservationGUI:
-
+class ATAObserverGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("ATA Observation GUI")
-        self.root.geometry("1400x900")
+        self.root.title("ATA Observation Console")
+        self.antennas = ["1a"]
 
-        customtkinter.set_appearance_mode("dark")
-        customtkinter.set_default_color_theme("blue")
+        if ctk is not None:
+            ctk.set_appearance_mode("dark")
+            ctk.set_default_color_theme("blue")
 
-        # Coordinate mode: radec, altaz, galactic, name
-        self.coord_mode = tk.StringVar(value="radec")
+        # --- Top info bar (time, UTC, LST) ---
+        self.info_frame = ttk.Frame(root)
+        self.info_frame.pack(side="top", fill="x", padx=5, pady=5)
 
-        # Selected profile
-        self.selected_profile = tk.StringVar(
-            value=list(OBSERVATION_PROFILES.keys())[0]
-        )
+        self.time_label = ttk.Label(self.info_frame, text="", font=("DejaVu Sans Mono", 10))
+        self.time_label.pack(side="left", padx=5)
 
-        self._build_layout()
-
-    # ---------- Layout ----------
-
-    def _build_layout(self):
-        # Main vertical layout: top main_frame + bottom log_frame
-        self.main_frame = customtkinter.CTkFrame(master=self.root)
+        # --- Main layout: left controls, right status/camera ---
+        self.main_frame = ttk.Frame(root)
         self.main_frame.pack(side="top", fill="both", expand=True)
 
-        self.log_frame = customtkinter.CTkFrame(master=self.root, height=150)
-        self.log_frame.pack(side="bottom", fill="x")
+        self.left_frame = ttk.Frame(self.main_frame)
+        self.left_frame.pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
-        # Inside main_frame: left controls + right side (status/camera)
-        self.left_frame = customtkinter.CTkFrame(
-            master=self.main_frame, width=360
+        self.right_frame = ttk.Frame(self.main_frame)
+        self.right_frame.pack(side="right", fill="both", expand=True, padx=5, pady=5)
+
+        # ---- Left: antenna, profile, pointing ----
+        self._build_antenna_frame(self.left_frame)
+        self._build_observing_frame(self.left_frame)
+        self._build_pointing_frame(self.left_frame)
+
+        # ---- Right: status + camera ----
+        self._build_status_frame(self.right_frame)
+        self._build_camera_frame(self.right_frame)
+
+        # ---- Bottom: progress + log ----
+        self.bottom_frame = ttk.Frame(root)
+        self.bottom_frame.pack(side="bottom", fill="x", padx=5, pady=5)
+
+        self.progress = ttk.Progressbar(self.bottom_frame, mode="indeterminate")
+        self.progress.pack(side="top", fill="x", expand=True, padx=5, pady=2)
+
+        self.log_text = tk.Text(
+            self.bottom_frame,
+            height=8,
+            width=120,
+            font=("DejaVu Sans Mono", 9),
         )
-        self.left_frame.pack(
-            side="left", fill="y", padx=10, pady=10
+        self.log_text.pack(side="bottom", fill="x", expand=False, padx=5, pady=2)
+
+        # Task state
+        self.current_task = None
+
+        # Camera state
+        self.camera_capture = None
+        self.camera_running = False
+
+        # Start clock updates
+        self.update_clock()
+
+    # ------------------------------------------------------------------
+    # UI building blocks
+    # ------------------------------------------------------------------
+
+    def _build_antenna_frame(self, parent):
+        lf = ttk.LabelFrame(parent, text="Antenna & Backend")
+        lf.pack(fill="x", padx=5, pady=5)
+
+        ant_label = ttk.Label(lf, text=f"Antennas: {', '.join(self.antennas)}")
+        ant_label.grid(row=0, column=0, columnspan=4, sticky="w", padx=5, pady=2)
+
+        self.reserve_button = ttk.Button(lf, text="Reserve", command=self.on_reserve)
+        self.reserve_button.grid(row=1, column=0, padx=5, pady=2, sticky="ew")
+
+        self.park_button = ttk.Button(lf, text="Park", command=self.on_park)
+        self.park_button.grid(row=1, column=1, padx=5, pady=2, sticky="ew")
+
+        self.release_button = ttk.Button(lf, text="Release", command=self.on_release)
+        self.release_button.grid(row=1, column=2, padx=5, pady=2, sticky="ew")
+
+        self.autotune_button = ttk.Button(lf, text="Autotune", command=self.on_autotune)
+        self.autotune_button.grid(row=1, column=3, padx=5, pady=2, sticky="ew")
+
+        # Frequency & attenuation controls
+        ttk.Label(lf, text="Freq (MHz):").grid(row=2, column=0, sticky="e", padx=5, pady=2)
+        self.freq_var = tk.StringVar(value="1420.405")
+        ttk.Entry(lf, textvariable=self.freq_var, width=10).grid(row=2, column=1, sticky="w", padx=5, pady=2)
+
+        ttk.Label(lf, text="LO:").grid(row=2, column=2, sticky="e", padx=5, pady=2)
+        self.lo_var = tk.StringVar(value="d")
+        ttk.Entry(lf, textvariable=self.lo_var, width=5).grid(row=2, column=3, sticky="w", padx=5, pady=2)
+
+        ttk.Label(lf, text="Atten (dB):").grid(row=3, column=0, sticky="e", padx=5, pady=2)
+        self.atten_var = tk.StringVar(value="20")
+        ttk.Entry(lf, textvariable=self.atten_var, width=5).grid(row=3, column=1, sticky="w", padx=5, pady=2)
+
+        self.set_freq_button = ttk.Button(lf, text="Set Freq", command=self.on_set_freq)
+        self.set_freq_button.grid(row=3, column=2, columnspan=2, padx=5, pady=4, sticky="ew")
+
+    def _build_observing_frame(self, parent):
+        lf = ttk.LabelFrame(parent, text="Observation Profile")
+        lf.pack(fill="x", padx=5, pady=5)
+
+        ttk.Label(lf, text="Profile:").grid(row=0, column=0, sticky="e", padx=5, pady=2)
+        self.profile_var = tk.StringVar(value="Custom")
+
+        profiles = ["Custom", "21cm Milky Way (1420.405 MHz)", "Mars (8431 MHz)"]
+        self.profile_menu = ttk.OptionMenu(
+            lf, self.profile_var, profiles[0], *profiles, command=self.on_profile_changed
         )
+        self.profile_menu.grid(row=0, column=1, columnspan=3, sticky="ew", padx=5, pady=2)
 
-        self.right_frame = customtkinter.CTkFrame(master=self.main_frame)
-        self.right_frame.pack(
-            side="right", fill="both", expand=True, padx=10, pady=10
-        )
+    def _build_pointing_frame(self, parent):
+        lf = ttk.LabelFrame(parent, text="Pointing & Tracking")
+        lf.pack(fill="x", padx=5, pady=5)
 
-        self._build_left_controls(self.left_frame)
-        self._build_right_tabs(self.right_frame)
-        self._build_log_area(self.log_frame)
+        # Pointing mode radio buttons
+        ttk.Label(lf, text="Mode:").grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        self.pointing_mode = tk.StringVar(value="radec")
 
-    def _build_left_controls(self, parent):
-        # ---- Antenna control ----
-        antenna_label = customtkinter.CTkLabel(
-            parent,
-            text=f"Antenna Control {antennas}",
-            font=("Arial", 18, "bold")
-        )
-        antenna_label.pack(pady=(5, 5))
-
-        button_frame = customtkinter.CTkFrame(parent)
-        button_frame.pack(fill="x", pady=(0, 10))
-
-        reserve_btn = customtkinter.CTkButton(
-            button_frame,
-            text="Reserve",
-            command=self.on_reserve_clicked
-        )
-        reserve_btn.pack(side="left", padx=5, pady=5)
-
-        park_btn = customtkinter.CTkButton(
-            button_frame,
-            text="Park",
-            command=self.on_park_clicked
-        )
-        park_btn.pack(side="left", padx=5, pady=5)
-
-        release_btn = customtkinter.CTkButton(
-            button_frame,
-            text="Release",
-            command=self.on_release_clicked
-        )
-        release_btn.pack(side="left", padx=5, pady=5)
-
-        # ---- Frequency / profile ----
-        freq_frame = customtkinter.CTkFrame(parent)
-        freq_frame.pack(fill="x", pady=(5, 10))
-
-        freq_label = customtkinter.CTkLabel(
-            freq_frame,
-            text="Observation Profile / Frequency",
-            font=("Arial", 16, "bold")
-        )
-        freq_label.pack(anchor="w", pady=(0, 5))
-
-        profile_combo = customtkinter.CTkComboBox(
-            freq_frame,
-            values=list(OBSERVATION_PROFILES.keys()),
-            variable=self.selected_profile,
-            command=self.on_profile_changed
-        )
-        profile_combo.pack(fill="x", pady=(0, 5))
-
-        freq_subframe = customtkinter.CTkFrame(freq_frame)
-        freq_subframe.pack(fill="x")
-
-        self.freq_entry = customtkinter.CTkEntry(
-            freq_subframe,
-            placeholder_text="Frequency [MHz]",
-            width=140
-        )
-        self.freq_entry.pack(side="left", padx=(0, 5), pady=5)
-
-        apply_freq_btn = customtkinter.CTkButton(
-            freq_subframe,
-            text="Set Frequency",
-            command=self.on_set_frequency_clicked
-        )
-        apply_freq_btn.pack(side="left", padx=5, pady=5)
-
-        # ---- Coordinate / pointing ----
-        coord_frame = customtkinter.CTkFrame(parent)
-        coord_frame.pack(fill="x", pady=(10, 10))
-
-        coord_label = customtkinter.CTkLabel(
-            coord_frame,
-            text="Pointing / Coordinates",
-            font=("Arial", 16, "bold")
-        )
-        coord_label.pack(anchor="w", pady=(0, 5))
-
-        # Coordinate mode radio buttons
-        mode_frame = customtkinter.CTkFrame(coord_frame)
-        mode_frame.pack(fill="x", pady=(0, 5))
-
-        for text, mode in [
+        modes = [
             ("RA/Dec", "radec"),
             ("Alt/Az", "altaz"),
-            ("Galactic", "galactic"),
+            ("Galactic", "gal"),
             ("Source name", "name"),
-        ]:
-            rb = customtkinter.CTkRadioButton(
-                mode_frame,
-                text=text,
-                variable=self.coord_mode,
-                value=mode,
-                command=self.on_coord_mode_changed
+            ("Park", "park"),
+        ]
+        col = 1
+        for text, val in modes:
+            ttk.Radiobutton(lf, text=text, variable=self.pointing_mode, value=val).grid(
+                row=0, column=col, sticky="w", padx=2, pady=2
             )
-            rb.pack(side="left", padx=(0, 5))
+            col += 1
 
-        coord_input_frame = customtkinter.CTkFrame(coord_frame)
-        coord_input_frame.pack(fill="x", pady=(5, 5))
+        # RA/Dec input
+        ttk.Label(lf, text="RA (hh:mm:ss):").grid(row=1, column=0, sticky="e", padx=5, pady=2)
+        self.ra_var = tk.StringVar()
+        ttk.Entry(lf, textvariable=self.ra_var, width=15).grid(row=1, column=1, sticky="w", padx=5, pady=2)
 
-        self.coord1_label = customtkinter.CTkLabel(
-            coord_input_frame, text="RA (h:m:s)"
-        )
-        self.coord1_label.grid(
-            row=0, column=0, sticky="w", padx=(0, 5), pady=2
-        )
+        ttk.Label(lf, text="Dec (dd:mm:ss):").grid(row=1, column=2, sticky="e", padx=5, pady=2)
+        self.dec_var = tk.StringVar()
+        ttk.Entry(lf, textvariable=self.dec_var, width=15).grid(row=1, column=3, sticky="w", padx=5, pady=2)
 
-        self.coord1_entry = customtkinter.CTkEntry(
-            coord_input_frame,
-            width=140,
-            placeholder_text="e.g. 12:34:56"
-        )
-        self.coord1_entry.grid(
-            row=0, column=1, sticky="w", padx=(0, 5), pady=2
-        )
+        # Alt/Az input
+        ttk.Label(lf, text="Alt (deg):").grid(row=2, column=0, sticky="e", padx=5, pady=2)
+        self.alt_var = tk.StringVar()
+        ttk.Entry(lf, textvariable=self.alt_var, width=10).grid(row=2, column=1, sticky="w", padx=5, pady=2)
 
-        self.coord2_label = customtkinter.CTkLabel(
-            coord_input_frame, text="Dec (d:m:s)"
-        )
-        self.coord2_label.grid(
-            row=1, column=0, sticky="w", padx=(0, 5), pady=2
-        )
+        ttk.Label(lf, text="Az (deg):").grid(row=2, column=2, sticky="e", padx=5, pady=2)
+        self.az_var = tk.StringVar()
+        ttk.Entry(lf, textvariable=self.az_var, width=10).grid(row=2, column=3, sticky="w", padx=5, pady=2)
 
-        self.coord2_entry = customtkinter.CTkEntry(
-            coord_input_frame,
-            width=140,
-            placeholder_text="+12:34:56"
-        )
-        self.coord2_entry.grid(
-            row=1, column=1, sticky="w", padx=(0, 5), pady=2
-        )
+        # Galactic input
+        ttk.Label(lf, text="l (deg):").grid(row=3, column=0, sticky="e", padx=5, pady=2)
+        self.glon_var = tk.StringVar()
+        ttk.Entry(lf, textvariable=self.glon_var, width=10).grid(row=3, column=1, sticky="w", padx=5, pady=2)
 
-        self.name_label = customtkinter.CTkLabel(
-            coord_input_frame, text="Source name"
-        )
-        self.name_label.grid(
-            row=2, column=0, sticky="w", padx=(0, 5), pady=2
+        ttk.Label(lf, text="b (deg):").grid(row=3, column=2, sticky="e", padx=5, pady=2)
+        self.glat_var = tk.StringVar()
+        ttk.Entry(lf, textvariable=self.glat_var, width=10).grid(row=3, column=3, sticky="w", padx=5, pady=2)
+
+        # Source name (catalog)
+        ttk.Label(lf, text="Source name (catalog):").grid(row=4, column=0, sticky="e", padx=5, pady=2)
+        self.source_name_var = tk.StringVar()
+        ttk.Entry(lf, textvariable=self.source_name_var, width=20).grid(
+            row=4, column=1, columnspan=3, sticky="w", padx=5, pady=2
         )
 
-        self.name_entry = customtkinter.CTkEntry(
-            coord_input_frame,
-            width=180,
-            placeholder_text="e.g. 3C286"
-        )
-        self.name_entry.grid(
-            row=2, column=1, sticky="w", padx=(0, 5), pady=2
-        )
+        self.track_button = ttk.Button(lf, text="Track", command=self.on_track)
+        self.track_button.grid(row=5, column=0, columnspan=2, padx=5, pady=4, sticky="ew")
 
-        # Track / stop buttons
-        track_button_frame = customtkinter.CTkFrame(coord_frame)
-        track_button_frame.pack(fill="x", pady=(5, 0))
+    def _build_status_frame(self, parent):
+        lf = ttk.LabelFrame(parent, text="Array Status (antenna 1a)")
+        lf.pack(fill="both", expand=True, padx=5, pady=5)
 
-        track_btn = customtkinter.CTkButton(
-            track_button_frame,
-            text="Track target",
-            command=self.on_track_clicked
-        )
-        track_btn.pack(side="left", padx=5, pady=5)
+        self.status_button = ttk.Button(lf, text="Refresh status", command=self.on_status)
+        self.status_button.pack(side="top", anchor="w", padx=5, pady=2)
 
-        stop_track_btn = customtkinter.CTkButton(
-            track_button_frame,
-            text="Stop tracking",
-            command=self.on_stop_tracking_clicked
-        )
-        stop_track_btn.pack(side="left", padx=5, pady=5)
+        # Parsed table for antenna 1a
+        self.status_tree = ttk.Treeview(lf, columns=(), show="headings", height=5)
+        self.status_tree.pack(fill="x", padx=5, pady=2)
 
-        # Time info
-        self.info_label = customtkinter.CTkLabel(
-            coord_frame, text="", font=("Arial", 12)
-        )
-        self.info_label.pack(anchor="w", pady=(5, 0))
-        self._update_time_info()
+        # Raw status (filtered) below
+        self.status_raw = tk.Text(lf, height=10, font=("DejaVu Sans Mono", 8))
+        self.status_raw.pack(fill="both", expand=True, padx=5, pady=2)
 
-        self.root.after(10000, self._update_time_info)  # periodic updates
+    def _build_camera_frame(self, parent):
+        lf = ttk.LabelFrame(parent, text="Site Camera")
+        lf.pack(fill="both", expand=True, padx=5, pady=5)
 
-    def _build_right_tabs(self, parent):
-        notebook = ttk.Notebook(parent)
-        notebook.pack(fill="both", expand=True)
+        self.camera_label = ttk.Label(lf, text="Camera disconnected", anchor="center")
+        self.camera_label.pack(fill="both", expand=True, padx=5, pady=5)
 
-        # Status tab
-        status_frame = customtkinter.CTkFrame(notebook)
-        notebook.add(status_frame, text="Status")
+        btn_frame = ttk.Frame(lf)
+        btn_frame.pack(fill="x", padx=5, pady=2)
 
-        self.status_text = tk.Text(
-            status_frame, wrap="word", height=20, width=80
-        )
-        self.status_text.pack(
-            fill="both", expand=True, padx=5, pady=5
-        )
+        self.camera_connect_btn = ttk.Button(btn_frame, text="Connect", command=self.on_camera_connect)
+        self.camera_connect_btn.pack(side="left", padx=5)
 
-        refresh_btn = customtkinter.CTkButton(
-            status_frame,
-            text="Refresh status",
-            command=self.on_refresh_status_clicked
-        )
-        refresh_btn.pack(pady=5)
+        self.camera_disconnect_btn = ttk.Button(btn_frame, text="Disconnect", command=self.on_camera_disconnect)
+        self.camera_disconnect_btn.pack(side="left", padx=5)
 
-        # Camera tab
-        camera_frame = customtkinter.CTkFrame(notebook)
-        notebook.add(camera_frame, text="Camera")
+        if cv2 is None or ImageTk is None:
+            self.camera_label.configure(
+                text="Camera preview requires OpenCV + Pillow.\n"
+                     "Install them or use the browser view."
+            )
+            self.camera_connect_btn.configure(state="disabled")
 
-        self.camera_html_frame = HtmlFrame(camera_frame)
-        self.camera_html_frame.pack(
-            fill="both", expand=True, padx=5, pady=5
-        )
+    # ------------------------------------------------------------------
+    # Time / logging / async tasks
+    # ------------------------------------------------------------------
 
-        camera_button_frame = customtkinter.CTkFrame(camera_frame)
-        camera_button_frame.pack(fill="x", pady=(0, 5))
+    def update_clock(self):
+        """Update local time, UTC, and LST (sidereal) in the top bar."""
+        try:
+            utc_now = datetime.datetime.now(datetime.timezone.utc)
+            local_now = utc_now.astimezone(LOCAL_TZ)
 
-        connect_btn = customtkinter.CTkButton(
-            camera_button_frame,
-            text="Connect camera",
-            command=self.on_camera_connect_clicked
-        )
-        connect_btn.pack(side="left", padx=5, pady=5)
+            # Sidereal time at ATA
+            lat_deg, lon_deg, height_m = ATA_LOCATION
+            try:
+                from astropy.coordinates import EarthLocation
+                location = EarthLocation(
+                    lat=lat_deg * u.deg,
+                    lon=lon_deg * u.deg,
+                    height=height_m * u.m,
+                )
+                t = Time(utc_now, location=location)
+                lst = t.sidereal_time("apparent")
+                lst_str = lst.to_string(unit=u.hour, sep=":", precision=0, pad=True)
+            except Exception:
+                lst_str = "N/A"
 
-        disconnect_btn = customtkinter.CTkButton(
-            camera_button_frame,
-            text="Disconnect camera",
-            command=self.on_camera_disconnect_clicked
-        )
-        disconnect_btn.pack(side="left", padx=5, pady=5)
+            self.time_label.configure(
+                text=(
+                    f"Local time: {local_now:%Y-%m-%d %H:%M:%S %Z}   "
+                    f"UTC: {utc_now:%H:%M:%S}   "
+                    f"LST (sidereal): {lst_str}"
+                )
+            )
+        except Exception as e:
+            self.time_label.configure(text=f"Time error: {e}")
 
-    def _build_log_area(self, parent):
-        # Progress indicator + status line
-        top_frame = customtkinter.CTkFrame(parent)
-        top_frame.pack(fill="x", pady=(5, 0))
+        self.root.after(1000, self.update_clock)
 
-        self.progress_label = customtkinter.CTkLabel(
-            top_frame, text="", anchor="w"
-        )
-        self.progress_label.pack(side="left", padx=5, pady=5)
+    def log(self, msg: str):
+        now_local = datetime.datetime.now(LOCAL_TZ)
+        ts = now_local.strftime("%Y-%m-%d %H:%M:%S %Z")
+        line = f"[{ts}] {msg}\n"
+        self.log_text.insert("end", line)
+        self.log_text.see("end")
 
-        self.progressbar = ttk.Progressbar(
-            top_frame, mode="indeterminate", length=200
-        )
-        self.progressbar.pack(side="right", padx=5, pady=5)
+    def run_long_task(self, fn, description: str, callback=None):
+        """Run ATA operations in a background thread with a spinner."""
+        if ac is None:
+            messagebox.showerror("ATATools missing", "ATATools.ata_control could not be imported.")
+            return
 
-        # Log text
-        self.log_text = tk.Text(parent, wrap="word", height=8)
-        self.log_text.pack(
-            fill="both", expand=True, padx=5, pady=(0, 5)
-        )
+        if self.current_task is not None:
+            messagebox.showwarning("Busy", "Another operation is still running.")
+            return
 
-    # ---------- Helpers ----------
-
-    def log(self, msg):
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        line = f"[{timestamp}] {msg}\n"
-        self.log_text.insert("1.0", line)  # newest at top
-        self.log_text.update_idletasks()
-
-    def run_with_progress(self, description, func):
-        """
-        Run `func` in a background thread while showing an
-        indeterminate progress bar. `func` returns a string or a
-        list/tuple of strings to log.
-        """
+        self.current_task = description
+        self.progress.start()
+        self.log(f"{description}...")
 
         def worker():
+            error = None
+            result = None
             try:
-                result = func()
-                error = None
+                result = fn()
             except Exception as e:
-                result = None
                 error = e
 
-            def on_done():
-                self.progressbar.stop()
-                self.progress_label.configure(text="")
-                if error is not None:
+            def done():
+                self.progress.stop()
+                self.current_task = None
+                if error:
                     self.log(f"{description} FAILED: {error}")
-                    messagebox.showerror(
-                        "Error", f"{description} failed:\n{error}"
-                    )
+                    messagebox.showerror("Error", f"{description} failed:\n{error}")
                 else:
-                    if isinstance(result, str):
-                        self.log(result)
-                    elif isinstance(result, (list, tuple)):
-                        for line in result:
-                            self.log(line)
-                    else:
-                        self.log(f"{description} completed.")
+                    self.log(f"{description} completed.")
+                if callback is not None:
+                    callback(result, error)
 
-            self.root.after(0, on_done)
+            self.root.after(0, done)
 
-        self.progress_label.configure(text=description)
-        self.progressbar.start(10)
         threading.Thread(target=worker, daemon=True).start()
 
-    def _update_time_info(self):
-        now = Time.now()
-        lst = now.sidereal_time('mean', longitude=ATA_LOCATION.lon)
-        text = (
-            f"UTC: {now.iso}   |   "
-            f"LST: {lst.to_string(unit=u.hour, sep=':')}"
-        )
-        self.info_label.configure(text=text)
-        # schedule next update
-        self.root.after(10000, self._update_time_info)
+    # ------------------------------------------------------------------
+    # ATA control handlers
+    # ------------------------------------------------------------------
 
-    # ---------- Callbacks: Antenna ----------
+    def on_reserve(self):
+        def task():
+            return ac.move_ant_group(self.antennas, "none", "atagr")
 
-    def on_reserve_clicked(self):
-        self.run_with_progress("Reserving antennas", ata_reserve_antennas)
+        self.run_long_task(task, "Reserving antennas")
 
-    def on_park_clicked(self):
-        self.run_with_progress("Parking antennas", ata_park_antennas)
+    def on_release(self):
+        def task():
+            return ac.move_ant_group(self.antennas, "atagr", "none")
 
-    def on_release_clicked(self):
-        self.run_with_progress("Releasing antennas", ata_release_antennas)
+        self.run_long_task(task, "Releasing antennas")
 
-    # ---------- Callbacks: Frequency / profiles ----------
+    def on_park(self):
+        def task():
+            return ac.park_antennas(self.antennas)
+
+        self.run_long_task(task, "Parking antennas")
+
+    def on_autotune(self):
+        def task():
+            ac.autotune(self.antennas)
+
+        self.run_long_task(task, "Running autotune")
+
+    def on_set_freq(self):
+        try:
+            freq = float(self.freq_var.get())
+        except ValueError:
+            messagebox.showerror("Invalid frequency", "Please enter a valid frequency in MHz.")
+            return
+
+        lo = self.lo_var.get().strip()
+        if lo not in ("a", "b", "c", "d"):
+            messagebox.showerror("Invalid LO", "LO must be one of a, b, c, d.")
+            return
+
+        try:
+            att = float(self.atten_var.get())
+        except ValueError:
+            messagebox.showerror("Invalid attenuation", "Please enter a valid attenuation in dB.")
+            return
+
+        def task():
+            ac.set_freq(freq, self.antennas, lo)
+            # Switch matrix + attenuators
+            ac.rf_switch_thread(self.antennas)
+            ac.set_atten_thread(
+                [[f"{ant}x", f"{ant}y"] for ant in self.antennas],
+                [[att, att] for _ in self.antennas],
+            )
+
+        self.run_long_task(task, f"Setting frequency to {freq} MHz, LO {lo}, attenuation {att} dB")
 
     def on_profile_changed(self, *_):
-        profile = self.selected_profile.get()
-        freq_hz = OBSERVATION_PROFILES.get(profile)
-        if freq_hz is not None:
-            self.freq_entry.delete(0, tk.END)
-            self.freq_entry.insert(0, f"{freq_hz / 1e6:.6f}")
+        profile = self.profile_var.get()
+        if profile.startswith("21cm"):
+            self.freq_var.set("1420.405")
+        elif profile.startswith("Mars"):
+            self.freq_var.set("8431")
+        # User still clicks "Set Freq" to actually apply.
 
-    def on_set_frequency_clicked(self):
-        text = self.freq_entry.get().strip()
-        if not text:
-            messagebox.showwarning(
-                "No frequency", "Please enter a frequency in MHz."
-            )
+    def on_track(self):
+        mode = self.pointing_mode.get()
+
+        if mode == "park":
+            self.on_park()
             return
+
+        # Name mode: use ATA catalog directly, no RA/Dec required
+        if mode == "name":
+            src = self.source_name_var.get().strip()
+            if not src:
+                messagebox.showerror("Missing source name", "Please enter a catalog source name.")
+                return
+
+            def task():
+                ac.track_source(self.antennas, source=src)
+
+            self.run_long_task(task, f"Tracking catalog source '{src}'")
+            return
+
+        # Coordinate-based modes need astropy's EarthLocation
         try:
-            freq_mhz = float(text)
-        except ValueError:
-            messagebox.showerror(
-                "Invalid frequency",
-                f"Could not parse '{text}' as a number."
-            )
+            from astropy.coordinates import EarthLocation
+        except ImportError:
+            messagebox.showerror("Astropy missing", "Astropy is required for coordinate transforms.")
             return
 
-        freq_hz = freq_mhz * 1e6
-
-        def do_set_freq():
-            return ata_set_frequency_hz(freq_hz)
-
-        self.run_with_progress(
-            f"Setting frequency to {freq_mhz:.6f} MHz",
-            do_set_freq
+        lat_deg, lon_deg, height_m = ATA_LOCATION
+        location = EarthLocation(
+            lat=lat_deg * u.deg,
+            lon=lon_deg * u.deg,
+            height=height_m * u.m,
         )
+        utc_now = datetime.datetime.now(datetime.timezone.utc)
+        obstime = Time(utc_now, location=location)
 
-    # ---------- Callbacks: Coordinate modes ----------
-
-    def on_coord_mode_changed(self):
-        mode = self.coord_mode.get()
         if mode == "radec":
-            self.coord1_label.configure(text="RA (h:m:s)")
-            self.coord2_label.configure(text="Dec (d:m:s)")
+            ra_str = self.ra_var.get().strip()
+            dec_str = self.dec_var.get().strip()
+            if not ra_str or not dec_str:
+                messagebox.showerror("Missing coordinates", "Enter both RA and Dec.")
+                return
+
+            try:
+                sky = SkyCoord(ra=ra_str, dec=dec_str, unit=("hourangle", "deg"))
+            except Exception as e:
+                messagebox.showerror("Invalid RA/Dec", f"Could not parse RA/Dec: {e}")
+                return
+
+            radec = [sky.ra.hour, sky.dec.deg]
+
+            def task():
+                ac.track_source(self.antennas, radec=radec)
+
+            desc = (
+                "Tracking RA="
+                + sky.ra.to_string(unit=u.hour, sep=":")
+                + " Dec="
+                + sky.dec.to_string(unit=u.deg, sep=":")
+            )
+            self.run_long_task(task, desc)
+
         elif mode == "altaz":
-            self.coord1_label.configure(text="Alt (deg)")
-            self.coord2_label.configure(text="Az (deg)")
-        elif mode == "galactic":
-            self.coord1_label.configure(text="l (deg)")
-            self.coord2_label.configure(text="b (deg)")
-        elif mode == "name":
-            # For now, same RA/Dec fields plus a name tag
-            self.coord1_label.configure(text="RA (h:m:s)")
-            self.coord2_label.configure(text="Dec (d:m:s)")
+            alt_str = self.alt_var.get().strip()
+            az_str = self.az_var.get().strip()
+            if not alt_str or not az_str:
+                messagebox.showerror("Missing coordinates", "Enter both Alt and Az.")
+                return
 
-    def on_track_clicked(self):
-        mode = self.coord_mode.get()
-        coord1 = self.coord1_entry.get().strip()
-        coord2 = self.coord2_entry.get().strip()
-        name = self.name_entry.get().strip()
+            try:
+                alt = float(alt_str)
+                az = float(az_str)
+            except ValueError:
+                messagebox.showerror("Invalid Alt/Az", "Alt and Az must be numbers in degrees.")
+                return
 
-        try:
-            if mode == "radec":
-                if not coord1 or not coord2:
-                    raise ValueError("RA and Dec are required.")
-                c = SkyCoord(
-                    coord1, coord2,
-                    unit=(u.hourangle, u.deg),
-                    frame="icrs"
-                )
-            elif mode == "altaz":
-                if not coord1 or not coord2:
-                    raise ValueError("Alt and Az are required.")
-                alt = float(coord1)
-                az = float(coord2)
-                now = Time.now()
-                altaz = AltAz(
-                    obstime=now,
-                    location=ATA_LOCATION,
-                    alt=alt * u.deg,
-                    az=az * u.deg
-                )
-                c = altaz.transform_to("icrs")
-            elif mode == "galactic":
-                if not coord1 or not coord2:
-                    raise ValueError("l and b are required.")
-                l = float(coord1)
-                b = float(coord2)
-                c = SkyCoord(
-                    l=l * u.deg, b=b * u.deg, frame="galactic"
-                ).transform_to("icrs")
-            elif mode == "name":
-                # For now, require RA/Dec plus name; we don't resolve names yet.
-                if not coord1 or not coord2:
-                    raise ValueError(
-                        "RA and Dec are required in 'Source name' mode."
-                    )
-                c = SkyCoord(
-                    coord1, coord2,
-                    unit=(u.hourangle, u.deg),
-                    frame="icrs"
-                )
-            else:
-                raise ValueError(f"Unknown coordinate mode '{mode}'.")
+            azel = [az, alt]  # ata_control expects [az, el]
 
-        except Exception as e:
+            def task():
+                ac.track_source(self.antennas, azel=azel)
+
+            self.run_long_task(task, f"Tracking Az={az:.2f}°, El={alt:.2f}°")
+
+        elif mode == "gal":
+            l_str = self.glon_var.get().strip()
+            b_str = self.glat_var.get().strip()
+            if not l_str or not b_str:
+                messagebox.showerror("Missing coordinates", "Enter both Galactic l and b.")
+                return
+
+            try:
+                glon = float(l_str)
+                glat = float(b_str)
+            except ValueError:
+                messagebox.showerror("Invalid Galactic", "l and b must be numbers in degrees.")
+                return
+
+            try:
+                gal = SkyCoord(l=glon * u.deg, b=glat * u.deg, frame="galactic")
+                sky = gal.transform_to("icrs")
+            except Exception as e:
+                messagebox.showerror("Transform error", f"Could not convert Galactic → RA/Dec: {e}")
+                return
+
+            radec = [sky.ra.hour, sky.dec.deg]
+
+            def task():
+                ac.track_source(self.antennas, radec=radec)
+
+            desc = f"Tracking Galactic l={glon:.2f}°, b={glat:.2f}° (RA/Dec converted)"
+            self.run_long_task(task, desc)
+
+    # ------------------------------------------------------------------
+    # Status handling
+    # ------------------------------------------------------------------
+
+    def on_status(self):
+        def task():
+            return ac.get_ascii_status()
+
+        def callback(ascii_status, error):
+            if error or not ascii_status:
+                return
+
+            lines = ascii_status.splitlines()
+
+            # Raw view: header + 1a row, if we can find them
+            filtered = []
+            for line in lines:
+                low = line.lower()
+                if "ant" in low and ("az" in low or "el" in low):
+                    filtered.append(line)
+                elif " 1a " in f" {low} " or low.startswith("1a "):
+                    filtered.append(line)
+            if not filtered:
+                filtered = lines  # fallback
+
+            self.status_raw.configure(state="normal")
+            self.status_raw.delete("1.0", "end")
+            self.status_raw.insert("end", "\n".join(filtered))
+            self.status_raw.configure(state="disabled")
+
+            # Parsed table for antenna 1a
+            header_tokens, row_tokens = self._parse_ascii_status_for_antenna(ascii_status, "1a")
+            if header_tokens and row_tokens:
+                self.status_tree.delete(*self.status_tree.get_children())
+                self.status_tree["columns"] = header_tokens
+                for col in header_tokens:
+                    self.status_tree.heading(col, text=col)
+                    self.status_tree.column(col, width=80, anchor="center")
+                self.status_tree.insert("", "end", values=row_tokens)
+
+        self.run_long_task(task, "Refreshing array status", callback=callback)
+
+    @staticmethod
+    def _parse_ascii_status_for_antenna(ascii_status: str, antenna: str):
+        """
+        Very generic parser for ac.get_ascii_status().
+
+        Heuristic:
+        - Find a header line whose first token starts with 'ant'.
+        - Find a row whose first token is the requested antenna.
+        - Split both lines on whitespace and zip them together.
+        """
+        lines = ascii_status.splitlines()
+        header_tokens = None
+        row_tokens = None
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            tokens = stripped.split()
+            # header line
+            if header_tokens is None and tokens and tokens[0].lower().startswith("ant"):
+                header_tokens = tokens
+            # antenna row
+            if tokens and tokens[0].lower() == antenna.lower():
+                row_tokens = tokens
+                # Grab header from previous line if needed
+                if header_tokens is None and i > 0:
+                    prev = lines[i - 1].strip().split()
+                    if prev and prev[0].lower().startswith("ant"):
+                        header_tokens = prev
+                break
+
+        if header_tokens and row_tokens:
+            if len(row_tokens) > len(header_tokens):
+                row_tokens = row_tokens[: len(header_tokens)]
+            elif len(row_tokens) < len(header_tokens):
+                row_tokens = row_tokens + [""] * (len(header_tokens) - len(row_tokens))
+            return header_tokens, row_tokens
+
+        return None, None
+
+    # ------------------------------------------------------------------
+    # Camera handling
+    # ------------------------------------------------------------------
+
+    def on_camera_connect(self):
+        if cv2 is None or ImageTk is None:
             messagebox.showerror(
-                "Coordinate error",
-                f"Could not interpret coordinates:\n{e}"
+                "Camera dependencies missing",
+                "OpenCV (cv2) and Pillow are required for the embedded camera view.",
             )
             return
 
-        ra_deg = c.ra.deg
-        dec_deg = c.dec.deg
+        if self.camera_running:
+            return
 
-        def do_track():
-            msg = ata_track_radec_degrees(ra_deg, dec_deg)
-            if name:
-                return f"{msg} (Source name: {name})"
-            return msg
+        self.log("Connecting to site camera...")
+        cap = cv2.VideoCapture(CAMERA_MJPEG_URL)
+        if not cap.isOpened():
+            self.log("Failed to open camera stream.")
+            messagebox.showerror("Camera error", "Could not open MJPEG stream.")
+            return
 
-        self.run_with_progress(
-            f"Tracking RA={c.ra.to_string(unit=u.hour, sep=':')}, "
-            f"Dec={c.dec.to_string(unit=u.deg, sep=':')}",
-            do_track
-        )
+        self.camera_capture = cap
+        self.camera_running = True
+        self.camera_label.configure(text="")
 
-    def on_stop_tracking_clicked(self):
-        self.run_with_progress("Stopping tracking", ata_stop_tracking)
+        self._update_camera_frame()
 
-    # ---------- Callbacks: Status / Camera ----------
+    def _update_camera_frame(self):
+        if not self.camera_running or self.camera_capture is None:
+            return
 
-    def on_refresh_status_clicked(self):
-        def do_status():
-            return ata_get_status_text()
+        ret, frame = self.camera_capture.read()
+        if not ret:
+            # Try again shortly without spamming the log
+            self.root.after(500, self._update_camera_frame)
+            return
 
-        def set_status_text():
-            # run_with_progress will log; we also want to show in the status pane
-            text = ata_get_status_text()
-            self.status_text.delete("1.0", tk.END)
-            self.status_text.insert("1.0", text)
-            return "Status refreshed."
+        # Convert BGR -> RGB and display in the label
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(frame_rgb)
 
-        self.run_with_progress("Refreshing ATA status", set_status_text)
+        # Resize to the current label size (or a default)
+        w = self.camera_label.winfo_width() or 640
+        h = self.camera_label.winfo_height() or 360
+        img = img.resize((w, h))
 
-    def on_camera_connect_clicked(self):
-        try:
-            self.camera_html_frame.load_website(CAMERA_URL)
-            self.log("Camera connected.")
-        except Exception as e:
-            messagebox.showerror(
-                "Camera error",
-                f"Failed to load camera page:\n{e}"
-            )
-            self.log(f"Camera connection failed: {e}")
+        photo = ImageTk.PhotoImage(img)
+        self.camera_label.image = photo
+        self.camera_label.configure(image=photo)
 
-    def on_camera_disconnect_clicked(self):
-        try:
-            self.camera_html_frame.load_html(
-                "<html><body><h3>Camera disconnected.</h3></body></html>"
-            )
-            self.log("Camera disconnected.")
-        except Exception as e:
-            self.log(f"Camera disconnect failed: {e}")
+        # Schedule next frame
+        self.root.after(100, self._update_camera_frame)
+
+    def on_camera_disconnect(self):
+        if not self.camera_running:
+            return
+        self.camera_running = False
+        if self.camera_capture is not None:
+            self.camera_capture.release()
+            self.camera_capture = None
+        self.camera_label.configure(text="Camera disconnected", image="")
+        self.camera_label.image = None
+        self.log("Camera disconnected.")
 
 
-# ======================================================
-# MAIN
-# ======================================================
+def main():
+    root = tk.Tk()
+    app = ATAObserverGUI(root)
+    root.geometry("1300x900")
+    root.mainloop()
+
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = ATAObservationGUI(root)
-    root.mainloop()
+    main()
