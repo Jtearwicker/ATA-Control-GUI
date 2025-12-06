@@ -177,6 +177,13 @@ class ATAObservationGUI:
 
         # Coordinate mode: radec, altaz, galactic, name
         self.coord_mode = tk.StringVar(value="radec")
+        # Cache for coordinate entries by mode (for the two numeric fields)
+        self.coord_cache = {
+            "radec": ["", ""],
+            "altaz": ["", ""],
+            "galactic": ["", ""],
+        }
+        self.last_coord_mode = "radec"
 
         # Selected profile – explicitly default to Custom
         self.selected_profile = tk.StringVar(value="Custom")
@@ -269,9 +276,10 @@ class ATAObservationGUI:
         freq_name_label = customtkinter.CTkLabel(freq_subframe, text="Frequency")
         freq_name_label.pack(side="left", padx=(0, 5), pady=5)
 
+        # BLANK by default (no "1420.405" placeholder)
         self.freq_entry = customtkinter.CTkEntry(
             freq_subframe,
-            placeholder_text="1420.405",
+            placeholder_text="",
             width=100
         )
         self.freq_entry.pack(side="left", padx=(0, 5), pady=5)
@@ -572,6 +580,9 @@ class ATAObservationGUI:
         if freq_hz is not None:
             self.freq_entry.delete(0, tk.END)
             self.freq_entry.insert(0, f"{freq_hz / 1e6:.6f}")
+        else:
+            # Custom: leave frequency blank
+            self.freq_entry.delete(0, tk.END)
 
     def on_set_frequency_clicked(self):
         text = self.freq_entry.get().strip()
@@ -603,41 +614,86 @@ class ATAObservationGUI:
     # ---------- Callbacks: Coordinate modes ----------
 
     def on_coord_mode_changed(self):
-        mode = self.coord_mode.get()
+        """
+        Handle switching between RA/Dec, Alt/Az, Galactic, and Source-name modes.
 
-        # Default: hide source-name input; show coord entries.
-        if mode == "radec":
+        - When switching away from a coordinate mode, cache the current entries.
+        - When switching back to that mode, restore the cached values.
+        - RA/Dec / Alt/Az / Galactic share the two numeric entry boxes.
+        - Source-name mode hides those boxes and shows only the name entry.
+        """
+        old_mode = self.last_coord_mode
+        new_mode = self.coord_mode.get()
+
+        # Save current entries for the old coordinate mode (if applicable)
+        if old_mode in self.coord_cache:
+            self.coord_cache[old_mode][0] = self.coord1_entry.get().strip()
+            self.coord_cache[old_mode][1] = self.coord2_entry.get().strip()
+
+        # Configure UI for the new mode
+        if new_mode == "radec":
+            # Show numeric fields
+            self.coord1_label.grid(row=0, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.coord1_entry.grid(row=0, column=1, sticky="w", padx=(0, 5), pady=2)
+            self.coord2_label.grid(row=1, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.coord2_entry.grid(row=1, column=1, sticky="w", padx=(0, 5), pady=2)
+            # Hide source-name row
+            self.name_label.grid_remove()
+            self.name_entry.grid_remove()
+
             self.coord1_label.configure(text="RA (h:m:s)")
             self.coord2_label.configure(text="Dec (d:m:s)")
             self.coord1_entry.configure(placeholder_text="12:34:56")
             self.coord2_entry.configure(placeholder_text="+12:34:56")
+
+        elif new_mode == "altaz":
+            self.coord1_label.grid(row=0, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.coord1_entry.grid(row=0, column=1, sticky="w", padx=(0, 5), pady=2)
+            self.coord2_label.grid(row=1, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.coord2_entry.grid(row=1, column=1, sticky="w", padx=(0, 5), pady=2)
             self.name_label.grid_remove()
             self.name_entry.grid_remove()
 
-        elif mode == "altaz":
             self.coord1_label.configure(text="Alt (deg)")
             self.coord2_label.configure(text="Az (deg)")
             self.coord1_entry.configure(placeholder_text="45.0")
             self.coord2_entry.configure(placeholder_text="180.0")
+
+        elif new_mode == "galactic":
+            self.coord1_label.grid(row=0, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.coord1_entry.grid(row=0, column=1, sticky="w", padx=(0, 5), pady=2)
+            self.coord2_label.grid(row=1, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.coord2_entry.grid(row=1, column=1, sticky="w", padx=(0, 5), pady=2)
             self.name_label.grid_remove()
             self.name_entry.grid_remove()
 
-        elif mode == "galactic":
             self.coord1_label.configure(text="l (deg)")
             self.coord2_label.configure(text="b (deg)")
             self.coord1_entry.configure(placeholder_text="120.0")
             self.coord2_entry.configure(placeholder_text="-5.0")
-            self.name_label.grid_remove()
-            self.name_entry.grid_remove()
 
-        elif mode == "name":
-            # Only show the source-name entry; RA/Dec fields are unused.
-            self.coord1_label.configure(text="(unused)")
-            self.coord2_label.configure(text="(unused)")
-            self.coord1_entry.configure(placeholder_text="")
-            self.coord2_entry.configure(placeholder_text="")
-            self.name_label.grid(row=2, column=0, sticky="w", padx=(0, 5), pady=2)
-            self.name_entry.grid(row=2, column=1, sticky="w", padx=(0, 5), pady=2)
+        elif new_mode == "name":
+            # Hide numeric fields entirely; show only source-name entry
+            self.coord1_label.grid_remove()
+            self.coord1_entry.grid_remove()
+            self.coord2_label.grid_remove()
+            self.coord2_entry.grid_remove()
+
+            self.name_label.grid(row=0, column=0, sticky="w", padx=(0, 5), pady=2)
+            self.name_entry.grid(row=0, column=1, sticky="w", padx=(0, 5), pady=2)
+
+        # Restore cached coordinate entries for the new mode (if it uses them)
+        if new_mode in self.coord_cache:
+            c1, c2 = self.coord_cache[new_mode]
+            self.coord1_entry.delete(0, tk.END)
+            self.coord1_entry.insert(0, c1)
+            self.coord2_entry.delete(0, tk.END)
+            self.coord2_entry.insert(0, c2)
+        else:
+            # For 'name' mode, numeric entries are hidden; leave their contents as-is.
+            pass
+
+        self.last_coord_mode = new_mode
 
     def on_track_clicked(self):
         mode = self.coord_mode.get()
