@@ -37,9 +37,9 @@ LOCAL_TZ = ZoneInfo("America/Los_Angeles")
 
 # Observation profiles: name -> center frequency in Hz (None = use manual entry)
 OBSERVATION_PROFILES = {
-    "21cm Milky Way (1420.405 MHz)": 1420.405e6,
-    "Mars @ 8431 MHz": 8431e6,
     "Custom": None,
+    "21cm Milky Way - 1420.405 MHz": 1420.405e6,
+    "Tianwen-1 Mars Orbiter - 8431.0 MHz": 8431.0e6,
 }
 
 # Original camera page URL for external browser use
@@ -178,10 +178,8 @@ class ATAObservationGUI:
         # Coordinate mode: radec, altaz, galactic, name
         self.coord_mode = tk.StringVar(value="radec")
 
-        # Selected profile
-        self.selected_profile = tk.StringVar(
-            value=list(OBSERVATION_PROFILES.keys())[0]
-        )
+        # Selected profile – explicitly default to Custom
+        self.selected_profile = tk.StringVar(value="Custom")
 
         self._build_layout()
 
@@ -268,7 +266,7 @@ class ATAObservationGUI:
         freq_subframe = customtkinter.CTkFrame(freq_frame)
         freq_subframe.pack(fill="x")
 
-        freq_name_label = customtkinter.CTkLabel(freq_subframe, text="Freq:")
+        freq_name_label = customtkinter.CTkLabel(freq_subframe, text="Frequency")
         freq_name_label.pack(side="left", padx=(0, 5), pady=5)
 
         self.freq_entry = customtkinter.CTkEntry(
