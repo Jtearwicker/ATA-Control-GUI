@@ -302,7 +302,7 @@ class ATAObservationGUI:
 
     def __init__(self, root):
         self.root = root
-        self.root.title("ATA Observation GUI")
+        self.root.title("Allen Telescope Array GNURadio Observation GUI")
         self.root.geometry("1400x900")
 
         customtkinter.set_appearance_mode("dark")
@@ -431,7 +431,7 @@ class ATAObservationGUI:
 
         freq_label = customtkinter.CTkLabel(
             freq_frame,
-            text="Observation Profile / Frequency",
+            text="Set Frequency / Observation Profile",
             font=("Arial", 16, "bold")
         )
         freq_label.pack(anchor="w", pady=(0, 5))
@@ -483,7 +483,7 @@ class ATAObservationGUI:
 
         coord_label = customtkinter.CTkLabel(
             coord_frame,
-            text="Pointing / Coordinates",
+            text="Pointing / Coordinate System",
             font=("Arial", 16, "bold")
         )
         coord_label.pack(anchor="w", pady=(0, 5))
