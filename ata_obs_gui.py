@@ -270,12 +270,13 @@ def usrp_check_levels():
 
 def usrp_reset_clocking():
     """
-    Run 'usrp_reset_clocking.py' and apply the same filtering logic:
-    log only 'Channel ...' and 'Note: ...' lines if present; otherwise
-    log stderr or a generic completion line.
+    Run 'usrp_reset_clocking.py'.
 
-    Again, we do NOT enforce zero exit status, and we call the script
-    via the shell so PATH handles it.
+    On success (return code 0), ignore stdout and just return:
+        'USRP clocking reset success.'
+
+    On failure, return stderr lines if available, otherwise a generic
+    non-zero return-code message.
     """
     try:
         proc = subprocess.run(
@@ -288,21 +289,15 @@ def usrp_reset_clocking():
     except Exception as e:
         return [f"Error running usrp_reset_clocking.py: {e}"]
 
-    stdout_lines = proc.stdout.splitlines() if proc.stdout else []
     stderr_lines = proc.stderr.splitlines() if proc.stderr else []
 
-    filtered = [
-        line for line in stdout_lines
-        if line.startswith("Channel ") or line.startswith("Note:")
-    ]
-
-    if filtered:
-        return filtered
-
-    if stderr_lines:
-        return ["usrp_reset_clocking.py stderr:"] + stderr_lines
-
-    return [f"usrp_reset_clocking.py finished with return code {proc.returncode}."]
+    if proc.returncode == 0:
+        # Success: don't spam UHD chatter, just report success.
+        return ["USRP clocking reset success."]
+    else:
+        if stderr_lines:
+            return ["usrp_reset_clocking.py stderr:"] + stderr_lines
+        return [f"usrp_reset_clocking.py finished with return code {proc.returncode}."]
 
 
 # ======================================================
