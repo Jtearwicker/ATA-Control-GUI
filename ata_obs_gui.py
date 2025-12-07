@@ -213,8 +213,8 @@ def ata_track_radec_degrees(ra_deg, dec_deg):
     ra_hours = ra_deg / 15.0
     ac.track_source(antennas, radec=[ra_hours, dec_deg])
     return (
-        f"Tracking RA = {ra_hours:.6f} h, Dec = {dec_deg:.6f} deg "
-        f"on antennas {antennas}."
+        f"Arrived on source: RA = {ra_hours:.6f} h, Dec = {dec_deg:.6f} deg "
+        f"on antennas {antennas}. Now tracking."
     )
 
 
@@ -413,14 +413,14 @@ class ATAObservationGUI:
 
         usrp_test_btn = customtkinter.CTkButton(
             usrp_btn_frame,
-            text="Check channel levels",
+            text="Check Channel Levels",
             command=self.on_usrp_check_clicked
         )
         usrp_test_btn.pack(side="left", padx=5, pady=5)
 
         usrp_reset_btn = customtkinter.CTkButton(
             usrp_btn_frame,
-            text="Reset channel clocking",
+            text="Reset Channel Clocking",
             command=self.on_usrp_reset_clicked
         )
         usrp_reset_btn.pack(side="left", padx=5, pady=5)
@@ -464,7 +464,7 @@ class ATAObservationGUI:
 
         apply_freq_btn = customtkinter.CTkButton(
             freq_subframe,
-            text="Set frequency",
+            text="Set Frequency",
             command=self.on_set_frequency_clicked
         )
         apply_freq_btn.pack(side="left", padx=5, pady=5)
@@ -496,7 +496,7 @@ class ATAObservationGUI:
             ("RA/Dec", "radec"),
             ("Alt/Az", "altaz"),
             ("Galactic", "galactic"),
-            ("Source name", "name"),
+            ("Source Name", "name"),
         ]:
             rb = customtkinter.CTkRadioButton(
                 mode_frame,
@@ -548,7 +548,7 @@ class ATAObservationGUI:
         )
 
         self.name_label = customtkinter.CTkLabel(
-            self.coord_fields_frame, text="Source name"
+            self.coord_fields_frame, text="Source Name"
         )
         self.name_entry = customtkinter.CTkEntry(
             self.coord_fields_frame,
@@ -557,10 +557,10 @@ class ATAObservationGUI:
         )
         # name_label/name_entry will be gridded only in "name" mode
 
-        # Right side: fixed-size "Check source location" button
+        # Right side: fixed-size "Check Source Location" button
         self.check_source_btn = customtkinter.CTkButton(
             coord_input_frame,
-            text="Check source location",
+            text="Check Source Location",
             command=self.on_check_source_location_clicked,
             width=180
         )
@@ -572,7 +572,7 @@ class ATAObservationGUI:
 
         track_btn = customtkinter.CTkButton(
             track_button_frame,
-            text="Track target",
+            text="Track Source",
             command=self.on_track_clicked
         )
         track_btn.pack(side="left", padx=5, pady=5)
@@ -584,7 +584,7 @@ class ATAObservationGUI:
         )
         park_btn.pack(side="left", padx=5, pady=5)
 
-        # Time / LST info
+        # Time / UTC info
         self.info_label = customtkinter.CTkLabel(
             coord_frame, text="", font=("Arial", 12)
         )
@@ -611,7 +611,7 @@ class ATAObservationGUI:
 
         refresh_btn = customtkinter.CTkButton(
             status_frame,
-            text="Show antenna status",
+            text="Show Antenna Status",
             command=self.on_refresh_status_clicked
         )
         refresh_btn.pack(pady=5)
@@ -715,17 +715,16 @@ class ATAObservationGUI:
 
     def _update_time_info(self):
         """
-        Show local civil time (Pacific) and LST (Local Sidereal Time).
+        Show local civil time at Hat Creek and UTC.
         """
         try:
             now_astropy = Time.now()
-            lst = now_astropy.sidereal_time('apparent', longitude=ATA_LOCATION.lon)
             local_now = datetime.datetime.now(LOCAL_TZ)
+            utc_now = now_astropy.to_datetime(timezone=ZoneInfo("UTC"))
             text = (
-                f"Local time (America/Los_Angeles): "
+                f"Local time (Hat Creek): "
                 f"{local_now.strftime('%Y-%m-%d %H:%M:%S %Z')}   |   "
-                f"LST (Local Sidereal Time): "
-                f"{lst.to_string(unit=u.hour, sep=':', precision=0, pad=True)}"
+                f"UTC: {utc_now.strftime('%Y-%m-%d %H:%M:%S %Z')}"
             )
         except Exception as e:
             text = f"Time error: {e}"
@@ -744,13 +743,15 @@ class ATAObservationGUI:
         self.log(f"Selected antennas: {antennas}")
 
     def on_reserve_clicked(self):
-        self.run_with_progress("Reserving antennas", ata_reserve_antennas)
+        self.run_with_progress("Reserving Antennas", ata_reserve_antennas)
 
     def on_park_clicked(self):
-        self.run_with_progress("Parking antennas", ata_park_antennas)
+        # Log slewing start
+        self.log(f"Slewing antennas {antennas} to park position.")
+        self.run_with_progress("Parking Antennas", ata_park_antennas)
 
     def on_release_clicked(self):
-        self.run_with_progress("Releasing antennas", ata_release_antennas)
+        self.run_with_progress("Releasing Antennas", ata_release_antennas)
 
     # ---------- Callbacks: USRP backend ----------
 
@@ -759,7 +760,7 @@ class ATAObservationGUI:
             return usrp_check_levels()
 
         self.run_with_progress(
-            "Checking USRP channel levels",
+            "Checking USRP Channel Levels",
             do_check
         )
 
@@ -768,7 +769,7 @@ class ATAObservationGUI:
             return usrp_reset_clocking()
 
         self.run_with_progress(
-            "Resetting USRP clocking / channel levels",
+            "Resetting USRP Clocking / Channel Levels",
             do_reset
         )
 
@@ -788,14 +789,14 @@ class ATAObservationGUI:
         text = self.freq_entry.get().strip()
         if not text:
             messagebox.showwarning(
-                "No frequency", "Please enter a frequency in MHz."
+                "No Frequency", "Please enter a frequency in MHz."
             )
             return
         try:
             freq_mhz = float(text)
         except ValueError:
             messagebox.showerror(
-                "Invalid frequency",
+                "Invalid Frequency",
                 f"Could not parse '{text}' as a number."
             )
             return
@@ -804,7 +805,7 @@ class ATAObservationGUI:
             return ata_set_frequency(freq_mhz)
 
         self.run_with_progress(
-            f"Setting frequency to {freq_mhz:.6f} MHz",
+            f"Setting Frequency to {freq_mhz:.6f} MHz",
             do_set
         )
 
@@ -898,9 +899,9 @@ class ATAObservationGUI:
     def _resolve_target_for_visibility(self, mode, coord1, coord2, name):
         """
         Resolve the user inputs into an ICRS SkyCoord plus a human-readable label.
-        Used by the 'Check source location' feature.
+        Used by the 'Check Source Location' feature.
 
-        For 'Source name':
+        For 'Source Name':
           - If the name matches a Solar System body, use ephemerides (get_body)
             at the current time and ATA location.
           - Otherwise, use SkyCoord.from_name (Simbad/etc.).
@@ -990,11 +991,11 @@ class ATAObservationGUI:
                 mode, coord1, coord2, name
             )
         except ValueError as e:
-            messagebox.showerror("Coordinate error", str(e))
+            messagebox.showerror("Coordinate Error", str(e))
             return
         except Exception as e:
             messagebox.showerror(
-                "Coordinate error",
+                "Coordinate Error",
                 f"Could not interpret coordinates or resolve source:\n{e}"
             )
             return
@@ -1058,7 +1059,7 @@ class ATAObservationGUI:
             return lines
 
         self.run_with_progress(
-            f"Checking source visibility for {label}", do_check
+            f"Checking Source Visibility for {label}", do_check
         )
 
     def on_track_clicked(self):
@@ -1071,17 +1072,20 @@ class ATAObservationGUI:
         if mode == "name":
             if not name:
                 messagebox.showerror(
-                    "Source name error",
+                    "Source Name Error",
                     "Please enter a source name to look up in the ATA catalog."
                 )
                 return
 
+            # Log slewing start
+            self.log(f"Slewing to catalog source '{name}' on antennas {antennas}.")
+
             def do_track_name():
                 ac.track_source(antennas, source=name)
-                return f"Tracking catalog source '{name}' on antennas {antennas}."
+                return f"Arrived on catalog source '{name}' on antennas {antennas}. Now tracking."
 
             self.run_with_progress(
-                f"Tracking catalog source '{name}'", do_track_name
+                f"Tracking Catalog Source '{name}'", do_track_name
             )
             return
 
@@ -1117,13 +1121,20 @@ class ATAObservationGUI:
 
         except Exception as e:
             messagebox.showerror(
-                "Coordinate error",
+                "Coordinate Error",
                 f"Could not interpret coordinates:\n{e}"
             )
             return
 
         ra_deg = c.ra.deg
         dec_deg = c.dec.deg
+
+        # Log slewing start
+        ra_str = c.ra.to_string(unit=u.hour, sep=':', precision=2, pad=True)
+        dec_str = c.dec.to_string(unit=u.deg, sep=':', precision=2, alwayssign=True, pad=True)
+        self.log(
+            f"Slewing to RA={ra_str}, Dec={dec_str} on antennas {antennas}."
+        )
 
         def do_track():
             return ata_track_radec_degrees(ra_deg, dec_deg)
@@ -1148,7 +1159,7 @@ class ATAObservationGUI:
             self.status_text.insert("1.0", text)
 
         self.run_with_progress(
-            "Refreshing ATA status",
+            "Refreshing ATA Status",
             do_status,
             callback=update_status,
             log_result=False
