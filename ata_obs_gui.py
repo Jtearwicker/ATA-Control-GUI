@@ -54,12 +54,6 @@ OBSERVATION_PROFILES = {
     "Tianwen-1 Mars Orbiter - 8431.0 MHz": 8431.0e6,
 }
 
-# Original camera page URL for external browser use
-CAMERA_PAGE_URL = (
-    "http://10.3.0.30/camera/index.html"
-    "?id=342&imagepath=%2Fmjpg%2Fvideo.mjpg&size=1#/video"
-)
-
 # Directory where USRP test scripts *might* live (currently unused but kept)
 HOME_DIR = os.path.expanduser("~")
 
@@ -345,7 +339,7 @@ class ATAObservationGUI:
         self.log_frame = customtkinter.CTkFrame(master=self.root, height=150)
         self.log_frame.pack(side="bottom", fill="x")
 
-        # Inside main_frame: left controls + right side (status/camera)
+        # Inside main_frame: left controls + right side (status)
         self.left_frame = customtkinter.CTkFrame(
             master=self.main_frame, width=360
         )
@@ -604,7 +598,7 @@ class ATAObservationGUI:
         notebook = ttk.Notebook(parent)
         notebook.pack(fill="both", expand=True)
 
-        # Status tab
+        # Status tab only
         status_frame = customtkinter.CTkFrame(notebook)
         notebook.add(status_frame, text="Status")
 
@@ -621,34 +615,6 @@ class ATAObservationGUI:
             command=self.on_refresh_status_clicked
         )
         refresh_btn.pack(pady=5)
-
-        # Camera tab – no integrated stream, just instructions
-        camera_frame = customtkinter.CTkFrame(notebook)
-        notebook.add(camera_frame, text="Camera")
-
-        self.camera_label = customtkinter.CTkLabel(
-            camera_frame,
-            text=(
-                "Integrated camera stream disabled in this GUI.\n\n"
-                "Use an external browser on a host that can see the camera:\n"
-                f"{CAMERA_PAGE_URL}"
-            ),
-            anchor="center",
-            justify="center"
-        )
-        self.camera_label.pack(
-            fill="both", expand=True, padx=5, pady=5
-        )
-
-        camera_button_frame = customtkinter.CTkFrame(camera_frame)
-        camera_button_frame.pack(fill="x", pady=(0, 5))
-
-        connect_btn = customtkinter.CTkButton(
-            camera_button_frame,
-            text="Copy camera URL",
-            command=self.on_camera_copy_url_clicked
-        )
-        connect_btn.pack(side="left", padx=5, pady=5)
 
     def _build_log_area(self, parent):
         # Progress indicator + status line
@@ -1187,24 +1153,6 @@ class ATAObservationGUI:
             callback=update_status,
             log_result=False
         )
-
-    # ---------- Camera: no integrated stream ----------
-
-    def on_camera_copy_url_clicked(self):
-        try:
-            self.root.clipboard_clear()
-            self.root.clipboard_append(CAMERA_PAGE_URL)
-            self.log(f"Camera URL copied to clipboard: {CAMERA_PAGE_URL}")
-            messagebox.showinfo(
-                "Camera URL copied",
-                f"The camera URL has been copied to the clipboard:\n\n{CAMERA_PAGE_URL}"
-            )
-        except Exception as e:
-            self.log(f"Failed to copy camera URL: {e}")
-            messagebox.showerror(
-                "Clipboard error",
-                f"Failed to copy camera URL:\n{e}"
-            )
 
 
 # ======================================================
