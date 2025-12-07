@@ -34,7 +34,7 @@ from ATATools import ata_control as ac
 AVAILABLE_ANTENNAS = ['1a']
 
 # Current antenna selection used by the control wrappers.
-# This will be updated from the "Select antennas" dropdown.
+# This will be updated from the "Select Antennas" dropdown.
 antennas = AVAILABLE_ANTENNAS.copy()
 
 # ATA site (approx Hat Creek / ATA)
@@ -608,6 +608,8 @@ class ATAObservationGUI:
         self.status_text.pack(
             fill="both", expand=True, padx=5, pady=5
         )
+        # Make status read-only
+        self.status_text.configure(state="disabled")
 
         refresh_btn = customtkinter.CTkButton(
             status_frame,
@@ -636,6 +638,9 @@ class ATAObservationGUI:
         self.log_text.pack(
             fill="both", expand=True, padx=5, pady=(0, 5)
         )
+        # Color tags for visibility checks
+        self.log_text.tag_config("up", foreground="green")
+        self.log_text.tag_config("down", foreground="red")
 
     # ---------- Helpers ----------
 
@@ -657,16 +662,25 @@ class ATAObservationGUI:
         global antennas
         antennas = self._parse_antenna_selection(selection_text)
 
-    def log(self, msg):
-        # Local time in Pacific, with timezone label
+    def log_with_tag(self, msg, tag=None):
+        """
+        Log a message with an optional text tag (for color).
+        """
         now_local = datetime.datetime.now(LOCAL_TZ)
         timestamp = now_local.strftime("%Y-%m-%d %H:%M:%S %Z")
         line = f"[{timestamp}] {msg}\n"
 
-        # Insert newest log at the top
-        self.log_text.insert("1.0", line)
+        if tag is not None:
+            self.log_text.insert("1.0", line, tag)
+        else:
+            self.log_text.insert("1.0", line)
+
         self.log_text.see("1.0")
         self.log_text.update_idletasks()
+
+    def log(self, msg):
+        # Default logging with no special tag
+        self.log_with_tag(msg, tag=None)
 
     def run_with_progress(self, description, func, callback=None, log_result=True):
         """
@@ -737,7 +751,7 @@ class ATAObservationGUI:
 
     def on_antennas_changed(self, choice: str):
         """
-        Callback when the 'Select antennas' dropdown changes.
+        Callback when the 'Select Antenna(s)' dropdown changes.
         """
         self._update_antennas_from_selection(choice)
         self.log(f"Selected antennas: {antennas}")
@@ -980,6 +994,10 @@ class ATAObservationGUI:
         """
         Check whether the current coordinates / source name are up,
         and compute approximate rise/set times (above 18°).
+
+        Color-code the "UP"/"NOT up" line:
+          - Green '✓' if UP
+          - Red '✗' if NOT up
         """
         mode = self.coord_mode.get()
         coord1 = self.coord1_entry.get().strip()
@@ -1058,8 +1076,26 @@ class ATAObservationGUI:
 
             return lines
 
+        def handle_result(lines):
+            if not isinstance(lines, (list, tuple)):
+                self.log(str(lines))
+                return
+            for line in lines:
+                # Color-code the up/not-up line and add symbol
+                if " is UP (above 18°)." in line:
+                    msg = "✓ " + line
+                    self.log_with_tag(msg, tag="up")
+                elif " is NOT up (below 18°)." in line:
+                    msg = "✗ " + line
+                    self.log_with_tag(msg, tag="down")
+                else:
+                    self.log(line)
+
         self.run_with_progress(
-            f"Checking Source Visibility for {label}", do_check
+            f"Checking Source Visibility for {label}",
+            do_check,
+            callback=handle_result,
+            log_result=False
         )
 
     def on_track_clicked(self):
@@ -1154,9 +1190,11 @@ class ATAObservationGUI:
         def update_status(text):
             if not isinstance(text, str):
                 return
-            # Full status in text box only (no logging to bottom console)
+            # Make text editable, update, then lock it again
+            self.status_text.configure(state="normal")
             self.status_text.delete("1.0", tk.END)
             self.status_text.insert("1.0", text)
+            self.status_text.configure(state="disabled")
 
         self.run_with_progress(
             "Refreshing ATA Status",
