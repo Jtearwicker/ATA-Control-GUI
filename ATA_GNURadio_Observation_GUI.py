@@ -325,7 +325,7 @@ class ATAObservationGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Allen Telescope Array GNURadio Observation GUI")
-        self.root.geometry("1400x900")
+        self.root.geometry("1800x1200")
 
         customtkinter.set_appearance_mode("dark")
         customtkinter.set_default_color_theme("blue")
