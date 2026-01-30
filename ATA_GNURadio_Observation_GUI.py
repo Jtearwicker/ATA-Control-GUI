@@ -891,7 +891,7 @@ class ATAObservationGUI:
         self.spec_ax.set_title("Live Spectrum")
         self.spec_ax.set_xlabel("Frequency (MHz)")
         self.spec_ax.set_ylabel("Power (dB)")
-        self.spec_line, = self.spec_ax.plot([], [])
+        self.spec_line, = self.spec_ax.plot([], [], linewidth=0.7)
 
         self.spec_canvas = FigureCanvasTkAgg(self.spec_figure, master=plot_frame)
         self.spec_canvas.draw()
