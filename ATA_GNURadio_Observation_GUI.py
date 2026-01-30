@@ -1000,10 +1000,10 @@ class ATAObservationGUI:
             self.log_text.insert("1.0", full_msg)
         self.log_text.configure(state="disabled")
 
-    def run_with_progress(self, description, worker_func, log_in_status=False):
+     def run_with_progress(self, description, worker_func, log_in_status=False):
         """
-        Run worker_func synchronously while updating the progress label
-        and logging results.
+        Run worker_func in a background thread while updating the progress
+        label and then log its result back on the Tk thread.
 
         worker_func: callable taking no args.
           It may return:
@@ -1014,68 +1014,75 @@ class ATAObservationGUI:
         If log_in_status is True, returned strings are appended to the
         antenna status text widget instead of the main log.
         """
-        # Set progress label
+        # Set progress label immediately on the GUI thread
         try:
             if hasattr(self, "progress_label") and self.progress_label is not None:
                 self.progress_label.configure(text=f"{description} ...")
         except Exception:
             pass
 
-        try:
-            result = worker_func()
-            err = None
-        except Exception as e:
-            result = None
-            err = e
-
-        # Restore progress label
-        try:
-            if hasattr(self, "progress_label") and self.progress_label is not None:
-                self.progress_label.configure(text="Idle")
-        except Exception:
-            pass
-
-        if err is not None:
-            # Log and show an error dialog
-            self.log(f"{description} failed: {err}", tag="error")
+        def finish(err=None, result=None):
+            # This runs back on the Tk thread via root.after
             try:
-                messagebox.showerror("Error", f"{description} failed:\n{err}")
+                if hasattr(self, "progress_label") and self.progress_label is not None:
+                    self.progress_label.configure(text="Idle")
             except Exception:
                 pass
-            return
 
-        # Normalize result to a list of strings
-        if result is None:
-            items = []
-        elif isinstance(result, (list, tuple)):
-            items = [s for s in result if s is not None]
-        else:
-            items = [result]
+            if err is not None:
+                # Log and show an error dialog
+                self.log(f"{description} failed: {err}", tag="error")
+                try:
+                    messagebox.showerror("Error", f"{description} failed:\n{err}")
+                except Exception:
+                    pass
+                return
 
-        # If worker returned nothing, we stay silent (no extra noise)
-        if not items:
-            return
+            # Normalize result to a list of strings
+            if result is None:
+                items = []
+            elif isinstance(result, (list, tuple)):
+                items = [s for s in result if s is not None]
+            else:
+                items = [result]
 
-        if log_in_status and hasattr(self, "status_text"):
-            wrote_to_status = False
-            try:
-                self.status_text.configure(state="normal")
-                for s in items:
-                    self.status_text.insert("end", str(s) + "\n")
-                self.status_text.see("end")
-                self.status_text.configure(state="disabled")
-                wrote_to_status = True
-            except Exception:
+            if not items:
+                # Worker returned nothing; stay quiet
+                return
+
+            if log_in_status and hasattr(self, "status_text"):
                 wrote_to_status = False
+                try:
+                    self.status_text.configure(state="normal")
+                    for s in items:
+                        self.status_text.insert("end", str(s) + "\n")
+                    self.status_text.see("end")
+                    self.status_text.configure(state="disabled")
+                    wrote_to_status = True
+                except Exception:
+                    wrote_to_status = False
 
-            if not wrote_to_status:
-                # Fallback: log everything if status widget not usable
+                if not wrote_to_status:
+                    for s in items:
+                        self.log(str(s))
+            else:
                 for s in items:
                     self.log(str(s))
-        else:
-            # Normal case: log results to main log
-            for s in items:
-                self.log(str(s))
+
+        def worker():
+            try:
+                result = worker_func()
+                err = None
+            except Exception as e:
+                err = e
+                result = None
+            # Bounce back to the Tk thread
+            self.root.after(0, lambda err=err, result=result: finish(err=err, result=result))
+
+        # Launch the worker in a background thread
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
+
 
         def finish(err=None, result=None):
             # Restore progress label
