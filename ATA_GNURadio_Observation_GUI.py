@@ -1019,26 +1019,87 @@ class ATAObservationGUI:
 
     def run_with_progress(self, description, worker_func, log_in_status=False):
         """
-        Run a potentially long-running worker_func in a background thread,
-        update the progress label, and log results when it finishes.
+        Run worker_func synchronously while updating the progress label
+        and logging results.
 
         worker_func: callable taking no args.
-            It may return:
-              - None
-              - a single string
-              - a list/tuple of strings
+          It may return:
+            - None
+            - a single string
+            - a list/tuple of strings
 
         If log_in_status is True, returned strings are appended to the
         antenna status text widget instead of the main log (with a short
         summary still going into the main log).
         """
-        # Update progress label and log start (in the GUI thread)
+        # Set progress label and log start
         try:
             if hasattr(self, "progress_label") and self.progress_label is not None:
                 self.progress_label.configure(text=f"{description} ...")
         except Exception:
-            # Don't let a missing label kill the action
             pass
+
+        self.log(f"{description} started.")
+
+        try:
+            result = worker_func()
+            err = None
+        except Exception as e:
+            result = None
+            err = e
+
+        # Restore progress label
+        try:
+            if hasattr(self, "progress_label") and self.progress_label is not None:
+                self.progress_label.configure(text="Idle")
+        except Exception:
+            pass
+
+        if err is not None:
+            # Log and show an error dialog
+            self.log(f"{description} failed: {err}", tag="error")
+            try:
+                messagebox.showerror("Error", f"{description} failed:\n{err}")
+            except Exception:
+                pass
+            return
+
+        # Normalize result to a list of strings
+        if result is None:
+            items = []
+        elif isinstance(result, (list, tuple)):
+            items = [s for s in result if s is not None]
+        else:
+            items = [result]
+
+        if not items:
+            # Just note completion
+            self.log(f"{description} completed.")
+            return
+
+        if log_in_status and hasattr(self, "status_text"):
+            wrote_to_status = False
+            try:
+                self.status_text.configure(state="normal")
+                for s in items:
+                    self.status_text.insert("end", str(s) + "\n")
+                self.status_text.see("end")
+                self.status_text.configure(state="disabled")
+                wrote_to_status = True
+            except Exception:
+                wrote_to_status = False
+
+            if not wrote_to_status:
+                for s in items:
+                    self.log(str(s))
+
+            self.log(f"{description} completed.")
+        else:
+            for s in items:
+                self.log(str(s))
+            # Optional: also log a summary line
+            self.log(f"{description} completed.")
+
 
         self.log(f"{description} started.")
 
