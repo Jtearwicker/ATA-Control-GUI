@@ -45,7 +45,7 @@ from astropy.coordinates import (
 )
 from astropy.time import Time
 
-#from ATATools import ata_control as ac
+from ATATools import ata_control as ac
 
 # ======================================================
 # CONFIG / CONSTANTS
