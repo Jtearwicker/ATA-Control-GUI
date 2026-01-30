@@ -1017,7 +1017,7 @@ class ATAObservationGUI:
             self.log_text.insert("1.0", full_msg)
         self.log_text.configure(state="disabled")
 
-        def run_with_progress(self, description, worker_func, log_in_status=False):
+    def run_with_progress(self, description, worker_func, log_in_status=False):
         """
         Run a potentially long-running worker_func in a background thread,
         update the progress label, and log results when it finishes.
