@@ -1012,17 +1012,14 @@ class ATAObservationGUI:
             - a list/tuple of strings
 
         If log_in_status is True, returned strings are appended to the
-        antenna status text widget instead of the main log (with a short
-        summary still going into the main log).
+        antenna status text widget instead of the main log.
         """
-        # Set progress label and log start
+        # Set progress label
         try:
             if hasattr(self, "progress_label") and self.progress_label is not None:
                 self.progress_label.configure(text=f"{description} ...")
         except Exception:
             pass
-
-        self.log(f"{description} started.")
 
         try:
             result = worker_func()
@@ -1055,9 +1052,8 @@ class ATAObservationGUI:
         else:
             items = [result]
 
+        # If worker returned nothing, we stay silent (no extra noise)
         if not items:
-            # Just note completion
-            self.log(f"{description} completed.")
             return
 
         if log_in_status and hasattr(self, "status_text"):
@@ -1073,18 +1069,13 @@ class ATAObservationGUI:
                 wrote_to_status = False
 
             if not wrote_to_status:
+                # Fallback: log everything if status widget not usable
                 for s in items:
                     self.log(str(s))
-
-            self.log(f"{description} completed.")
         else:
+            # Normal case: log results to main log
             for s in items:
                 self.log(str(s))
-            # Optional: also log a summary line
-            self.log(f"{description} completed.")
-
-
-        self.log(f"{description} started.")
 
         def finish(err=None, result=None):
             # Restore progress label
