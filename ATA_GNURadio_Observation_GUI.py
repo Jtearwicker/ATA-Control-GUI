@@ -201,29 +201,12 @@ def set_global_antennas(new_ants):
 
 def ata_reserve_antennas():
     """
-    Reserve antennas for ATA-GR pipeline.
-
-    Uses ac.get_snap2(ant) to check connected SNAP2 and then
-    ac.move_ant_group(antennas, 'none', 'atagr') to reserve.
+    Reserve antennas for ATA-GR pipeline by moving them
+    from group 'none' to group 'atagr'.
     """
-    connected = []
-    not_connected = []
-    for ant in antennas:
-        try:
-            snap2 = ac.get_snap2(ant)
-            if snap2:
-                connected.append((ant, snap2))
-            else:
-                not_connected.append(ant)
-        except Exception:
-            not_connected.append(ant)
-
-    if not connected:
-        raise RuntimeError("No selected antennas are connected to SNAP2 boards!")
-
-    # Move from group 'none' to 'atagr'
     ac.move_ant_group(antennas, 'none', 'atagr')
     return f"Antennas {antennas} moved from 'none' to 'atagr' (reserved)."
+
 
 
 def ata_park_antennas():
