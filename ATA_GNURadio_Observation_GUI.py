@@ -925,8 +925,9 @@ class ATAObservationGUI:
             row=1, column=0, columnspan=2, sticky="w", padx=5, pady=(0, 5)
         )
 
-        image_frame = customtkinter.CTkFrame(parent)
-        image_frame.pack(side="top", fill="both", expand=True, padx=10, pady=5)
+        image_frame = customtkinter.CTkFrame(parent, width=640, height=360)
+        image_frame.pack(side="top", fill="x", expand=False, padx=10, pady=5)
+        image_frame.pack_propagate(False)
 
         # We use a plain Tk label here because PhotoImage works directly with it.
         self.camera_label = tk.Label(image_frame, bg="black")
@@ -1622,11 +1623,12 @@ class ATAObservationGUI:
         try:
             stream = urllib.request.urlopen(url, timeout=5)
         except Exception as e:
-            self.root.after(0, lambda: self._camera_error(
-                f"Could not open MJPEG stream at {url}: {e}"
-            ))
+            # Capture the message now so we don't reference 'e' after the except block
+            msg = f"Could not open MJPEG stream at {url}: {e}"
+            self.root.after(0, lambda msg=msg: self._camera_error(msg))
             self.camera_running = False
             return
+
 
         bytes_buffer = b""
         while not self.camera_stop_event.is_set():
