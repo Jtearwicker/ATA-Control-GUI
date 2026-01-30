@@ -63,7 +63,7 @@ HOME_DIR = os.path.expanduser("~")
 
 # Spectrum / streaming config
 SPECTRUM_ZMQ_ADDRESS = "tcp://arise-sink.hcro.org:5550"
-SPECTRUM_FFT_SIZE = 4096        # nominal, but we'll use whatever comes in
+SPECTRUM_FFT_SIZE = 8192        # nominal, but we'll use whatever comes in
 SPECTRUM_SAMP_RATE = 3.84e6     # Hz
 SPECTRUM_SCRIPT = os.path.join(
     os.path.dirname(__file__),
@@ -1102,14 +1102,14 @@ class ATAObservationGUI:
             try:
                 result = worker_func()
             except Exception as e:
-                # Bounce completion back to the GUI thread
-                self.root.after(0, lambda: finish(err=e, result=None))
+                # Capture the exception value in a default arg so it
+                # survives after the except block ends (Python 3 quirk).
+                err = e
+                self.root.after(0, lambda err=err: finish(err=err, result=None))
             else:
-                self.root.after(0, lambda: finish(err=None, result=result))
-
-        # Fire the worker in the background so the GUI stays responsive
-        threading.Thread(target=worker, daemon=True).start()
-
+                # Same trick for result, to be safe.
+                res = result
+                self.root.after(0, lambda res=res: finish(err=None, result=res))
 
     def _update_time_info(self):
         """
