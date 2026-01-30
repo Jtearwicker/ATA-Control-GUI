@@ -925,7 +925,7 @@ class ATAObservationGUI:
             row=1, column=0, columnspan=2, sticky="w", padx=5, pady=(0, 5)
         )
 
-        image_frame = customtkinter.CTkFrame(parent, width=640, height=360)
+        image_frame = customtkinter.CTkFrame(parent, width=640, height=480)
         image_frame.pack(side="top", fill="x", expand=False, padx=10, pady=5)
         image_frame.pack_propagate(False)
 
