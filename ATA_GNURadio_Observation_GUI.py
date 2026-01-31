@@ -938,6 +938,17 @@ class ATAObservationGUI:
         top_frame = customtkinter.CTkFrame(parent)
         top_frame.pack(fill="x", pady=(5, 0))
 
+        # Progress bar for long-running operations (slews, autotune, etc.)
+        self.progress_bar = customtkinter.CTkProgressBar(
+            top_frame,
+            mode="indeterminate",
+            width=200,
+        )
+        self.progress_bar.pack(side="left", padx=(5, 5))
+        # Ensure it's visually empty at startup
+        self.progress_bar.set(0.0)
+
+        # Text label next to the bar
         self.progress_label = customtkinter.CTkLabel(
             top_frame,
             text="Idle",
@@ -964,6 +975,7 @@ class ATAObservationGUI:
         # Tag styles for up/down messages in source location
         self.log_text.tag_config("up", foreground="green")
         self.log_text.tag_config("down", foreground="red")
+
 
     # ---------- Helpers ----------
 
