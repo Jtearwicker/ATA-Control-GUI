@@ -1413,33 +1413,18 @@ class ATAObservationGUI:
 
     def on_refresh_status_clicked(self):
         """
-        Fetch and display ATA ASCII status for the currently selected antennas.
+        Fetch and display the full ATA ASCII status (ac.get_ascii_status()).
         """
         def do_status():
+            # Directly mirror: print(ac.get_ascii_status())
             full_status = ata_get_status()
+            return [full_status]
 
-            lines = []
-            in_table = False
-            for line in full_status.splitlines():
-                if line.strip().startswith("antenna"):
-                    in_table = True
-                    lines.append(line)
-                    continue
-                if in_table:
-                    if line.strip() == "" or set(line.strip()) == {"-"}:
-                        lines.append(line)
-                    else:
-                        parts = line.split()
-                        if parts and parts[0] in antennas:
-                            lines.append(line)
-
-            if not lines:
-                lines.append("No status lines found for selected antennas.")
-
-            text = "\n".join(lines)
-            return [text]
-
-        self.run_with_progress("Fetching antenna status", do_status, log_in_status=True)
+        self.run_with_progress(
+            "Fetching antenna status",
+            do_status,
+            log_in_status=True
+        )
 
     def on_usrp_check_clicked(self):
         def do_check():
