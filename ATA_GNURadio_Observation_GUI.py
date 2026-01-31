@@ -1016,7 +1016,7 @@ class ATAObservationGUI:
     def run_with_progress(self, description, worker_func, log_in_status=False):
         """
         Run worker_func in a background thread while updating the progress
-        label and then log its result back on the Tk thread.
+        bar/label, then log its result back on the Tk thread.
 
         worker_func: callable taking no args.
           It may return:
@@ -1027,7 +1027,15 @@ class ATAObservationGUI:
         If log_in_status is True, returned strings are appended to the
         antenna status text widget instead of the main log.
         """
-        # Set progress label immediately on the GUI thread
+        # Start progress bar + label immediately on the GUI thread
+        try:
+            if hasattr(self, "progress_bar") and self.progress_bar is not None:
+                # Indeterminate spinner
+                self.progress_bar.configure(mode="indeterminate")
+                self.progress_bar.start()
+        except Exception:
+            pass
+
         try:
             if hasattr(self, "progress_label") and self.progress_label is not None:
                 self.progress_label.configure(text=f"{description} ...")
@@ -1036,6 +1044,14 @@ class ATAObservationGUI:
 
         def finish(err=None, result=None):
             # This runs back on the Tk thread via root.after
+            try:
+                if hasattr(self, "progress_bar") and self.progress_bar is not None:
+                    self.progress_bar.stop()
+                    # Reset to empty bar
+                    self.progress_bar.set(0.0)
+            except Exception:
+                pass
+
             try:
                 if hasattr(self, "progress_label") and self.progress_label is not None:
                     self.progress_label.configure(text="Idle")
@@ -1079,6 +1095,7 @@ class ATAObservationGUI:
                     for s in items:
                         self.log(str(s))
             else:
+                # Normal case: log results to main log
                 for s in items:
                     self.log(str(s))
 
@@ -1087,14 +1104,18 @@ class ATAObservationGUI:
                 result = worker_func()
                 err = None
             except Exception as e:
-                err = e
                 result = None
+                err = e
             # Bounce back to the Tk thread
-            self.root.after(0, lambda err=err, result=result: finish(err=err, result=result))
+            self.root.after(
+                0,
+                lambda err=err, result=result: finish(err=err, result=result)
+            )
 
         # Launch the worker in a background thread
         t = threading.Thread(target=worker, daemon=True)
         t.start()
+
 
     def _update_time_info(self):
         """
