@@ -937,6 +937,229 @@ class ATAObservationGUI:
         self.camera_label = tk.Label(image_frame, bg="black")
         self.camera_label.pack(fill="both", expand=True)
 
+    def _build_milky_way_tab(self, parent):
+        """
+        Build the 'Milky Way Map' tab.
+
+        This displays a Milky Way image and overlays which galactic
+        longitudes along b=0° are currently above 18° at HCRO.
+        """
+        outer = customtkinter.CTkFrame(parent)
+        outer.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Top controls
+        control_frame = customtkinter.CTkFrame(outer)
+        control_frame.pack(side="top", fill="x", padx=5, pady=5)
+
+        refresh_btn = customtkinter.CTkButton(
+            control_frame,
+            text="Refresh Visibility",
+            command=self.update_mw_visibility,
+        )
+        refresh_btn.pack(side="left", padx=5, pady=5)
+
+        info_label = customtkinter.CTkLabel(
+            control_frame,
+            text=(
+                "Shows Milky Way in galactic coordinates; "
+                "green ticks = longitudes (b=0°) above 18°."
+            ),
+        )
+        info_label.pack(side="left", padx=10, pady=5)
+
+        # Middle: image on the left, text on the right
+        middle_frame = customtkinter.CTkFrame(outer)
+        middle_frame.pack(side="top", fill="both", expand=True, padx=5, pady=5)
+
+        image_frame = customtkinter.CTkFrame(middle_frame)
+        image_frame.pack(side="left", fill="both", expand=True, padx=5, pady=5)
+
+        text_frame = customtkinter.CTkFrame(middle_frame)
+        text_frame.pack(side="right", fill="both", expand=True, padx=5, pady=5)
+
+        # Text area listing visible longitudes and altitudes
+        self.mw_text = tk.Text(
+            text_frame,
+            wrap="word",
+            height=15,
+            width=40,
+        )
+        self.mw_text.pack(fill="both", expand=True, padx=5, pady=5)
+        self.mw_text.insert(
+            "1.0",
+            "Press 'Refresh Visibility' to compute which Milky Way longitudes (b=0°)\n"
+            "are currently above 18° at Hat Creek.\n",
+        )
+        self.mw_text.configure(state="disabled")
+
+        # Load Milky Way image
+        self.mw_original_image = None
+        self.mw_image = None
+        self.mw_photo = None
+
+        if (Image is None) or (ImageTk is None):
+            self.mw_image_label = tk.Label(
+                image_frame,
+                text="PIL (Pillow) is not available.\nCannot display Milky Way image.",
+            )
+            self.mw_image_label.pack(fill="both", expand=True)
+        else:
+            try:
+                img = Image.open(MILKY_WAY_IMAGE)
+            except Exception as e:
+                self.mw_image_label = tk.Label(
+                    image_frame,
+                    text=f"Could not load MWimg.jpg:\n{e}",
+                )
+                self.mw_image_label.pack(fill="both", expand=True)
+            else:
+                # Resize to something reasonable for the GUI
+                max_w, max_h = 800, 400
+                w, h = img.size
+                scale = min(max_w / float(w), max_h / float(h), 1.0)
+                new_size = (int(w * scale), int(h * scale))
+                img_resized = img.resize(new_size, Image.LANCZOS)
+
+                self.mw_original_image = img_resized
+                self.mw_image = self.mw_original_image.copy()
+                self.mw_photo = ImageTk.PhotoImage(self.mw_image)
+
+                self.mw_image_label = tk.Label(image_frame, image=self.mw_photo)
+                self.mw_image_label.pack(fill="both", expand=True)
+                self.mw_image_label.image = self.mw_photo
+
+        # Try an initial visibility computation (will no-op if image failed)
+        self.update_mw_visibility()
+
+    def _gal_long_to_x(self, l_deg, width):
+        """
+        Map a galactic longitude (deg) to an x-pixel coordinate in the image.
+
+        We assume l=0° is at the horizontal center of the image, with
+        longitudes increasing to the left and right.
+        """
+        # Wrap longitude into [-180, 180)
+        wrapped = ((l_deg + 180.0) % 360.0) - 180.0
+        x_frac = (wrapped / 360.0) + 0.5
+        x_pix = int(max(0, min(width - 1, x_frac * width)))
+        return x_pix
+
+    def _update_mw_map_image(self, visible_longs):
+        """
+        Redraw the Milky Way image with visibility markers.
+
+        Parameters
+        ----------
+        visible_longs : sequence of float
+            Galactic longitudes (deg) along b=0° that are currently visible.
+        """
+        if self.mw_original_image is None:
+            return
+
+        try:
+            from PIL import ImageDraw
+        except Exception:
+            return
+
+        img = self.mw_original_image.copy()
+        draw = ImageDraw.Draw(img)
+
+        w, h = img.size
+        y_mid = h // 2
+
+        # Draw a faint central line for the galactic plane
+        draw.line([(0, y_mid), (w, y_mid)], fill="white", width=1)
+
+        # Draw small green ticks for each visible longitude
+        for l in visible_longs:
+            x = self._gal_long_to_x(l, w)
+            draw.line(
+                [(x, y_mid - 10), (x, y_mid + 10)],
+                fill="lime",
+                width=2,
+            )
+
+        # Draw red lines at the approximate edges of visibility
+        if visible_longs:
+            l_min = min(visible_longs)
+            l_max = max(visible_longs)
+            x_min = self._gal_long_to_x(l_min, w)
+            x_max = self._gal_long_to_x(l_max, w)
+            draw.line(
+                [(x_min, y_mid - 20), (x_min, y_mid + 20)],
+                fill="red",
+                width=3,
+            )
+            draw.line(
+                [(x_max, y_mid - 20), (x_max, y_mid + 20)],
+                fill="red",
+                width=3,
+            )
+
+        self.mw_image = img
+        self.mw_photo = ImageTk.PhotoImage(self.mw_image)
+        self.mw_image_label.configure(image=self.mw_photo)
+        self.mw_image_label.image = self.mw_photo
+
+    def update_mw_visibility(self):
+        """
+        Recompute which galactic longitudes are above 18° and update
+        both the textual summary and the overlaid image.
+        """
+        longs_deg, alts_deg = compute_visible_galactic_longitudes(
+            ATA_LOCATION,
+            horizon_deg=18.0,
+            step_deg=10.0,
+        )
+
+        # Update text area
+        if hasattr(self, "mw_text"):
+            self.mw_text.configure(state="normal")
+            self.mw_text.delete("1.0", "end")
+
+            if longs_deg.size == 0:
+                self.mw_text.insert(
+                    "1.0",
+                    "No galactic longitudes along the Milky Way mid-plane (b=0°)\n"
+                    "are currently above 18° at Hat Creek.\n",
+                )
+            else:
+                self.mw_text.insert(
+                    "1.0",
+                    "Galactic longitudes (b=0°) above 18° at Hat Creek right now:\n\n",
+                )
+                for l, alt in zip(longs_deg, alts_deg):
+                    self.mw_text.insert(
+                        "end",
+                        f"  l = {l:5.1f}°, altitude ≈ {alt:5.1f}°\n",
+                    )
+
+                self.mw_text.insert("end", "\nApproximate visible longitude range:\n")
+                self.mw_text.insert(
+                    "end",
+                    f"  from l ≈ {longs_deg.min():5.1f}° to l ≈ {longs_deg.max():5.1f}°\n",
+                )
+
+            self.mw_text.configure(state="disabled")
+
+        # Update the image overlay
+        if longs_deg.size > 0:
+            self._update_mw_map_image(list(longs_deg))
+        else:
+            # Reset to plain image if we have one
+            if self.mw_original_image is not None and hasattr(self, "mw_image_label"):
+                self.mw_image = self.mw_original_image.copy()
+                self.mw_photo = ImageTk.PhotoImage(self.mw_image)
+                self.mw_image_label.configure(image=self.mw_photo)
+                self.mw_image_label.image = self.mw_photo
+
+
+
+
+
+
+
+
     def _build_log_area(self, parent):
         # Progress indicator + status line
         top_frame = customtkinter.CTkFrame(parent)
