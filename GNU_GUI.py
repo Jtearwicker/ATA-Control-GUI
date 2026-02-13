@@ -75,6 +75,8 @@ CAMERA_PAGE_URL = "http://10.3.0.30/camera/index.html?id=342&imagepath=%2Fmjpg%2
 CAMERA_MJPEG_URL = "http://10.3.0.30/mjpg/video.mjpg"
 
 
+# Milky Way all-sky image (galactic coordinates)
+MILKY_WAY_IMAGE = os.path.join(os.path.dirname(__file__), "MWimg.jpg")
 
 # ======================================================
 # ASTRO UTILS
@@ -165,6 +167,42 @@ def compute_altitude_and_rise_set(coord, location, horizon_deg=18.0, n_steps=240
 
     is_up = alt_deg >= horizon_deg
     return alt_deg, is_up, next_rise, next_set
+
+
+
+def compute_visible_galactic_longitudes(
+    location,
+    horizon_deg: float = 18.0,
+    step_deg: float = 10.0,
+):
+    """
+    Sample galactic longitudes along the Milky Way mid-plane (b=0 deg)
+    and return those currently above `horizon_deg` at the given location.
+
+    Returns
+    -------
+    longs_visible : np.ndarray
+        Longitudes (deg) with altitude >= horizon_deg.
+    alts_visible : np.ndarray
+        Corresponding approximate altitudes (deg).
+    """
+    now_utc = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+    t = Time(now_utc)
+
+    longs = np.arange(0.0, 360.0, step_deg)
+    alt_list = []
+
+    for l_deg in longs:
+        gal = SkyCoord(l=l_deg * u.deg, b=0.0 * u.deg, frame="galactic")
+        icrs = gal.icrs
+        altaz = icrs.transform_to(AltAz(obstime=t, location=location))
+        alt_list.append(altaz.alt.deg)
+
+    alts = np.array(alt_list)
+    mask = alts >= horizon_deg
+
+    return longs[mask], alts[mask]
+
 
 
 # ======================================================
@@ -845,7 +883,13 @@ class ATAObservationGUI:
         notebook.add(camera_frame, text="Camera")
         self._build_camera_tab(camera_frame)
 
+        # Milky Way Map tab
+        mw_frame = customtkinter.CTkFrame(notebook)
+        notebook.add(mw_frame, text="Milky Way Map")
+        self._build_milky_way_tab(mw_frame)
+
         self.right_notebook = notebook
+
 
     def _build_spectrum_tab(self, parent):
         # Top control strip
@@ -936,6 +980,12 @@ class ATAObservationGUI:
         # We use a plain Tk label here because PhotoImage works directly with it.
         self.camera_label = tk.Label(image_frame, bg="black")
         self.camera_label.pack(fill="both", expand=True)
+
+    
+
+
+
+
 
     def _build_milky_way_tab(self, parent):
         """
