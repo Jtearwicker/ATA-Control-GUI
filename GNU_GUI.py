@@ -47,6 +47,26 @@ from astropy.time import Time
 
 from ATATools import ata_control as ac
 
+# Milky Way map geometry (from original 21cm GUI)
+# Sun position in the *resized* image
+MW_SUN_POS = (2800 // 12, 3850 // 12)
+
+# Outer-ring pixel positions every 10 degrees in galactic longitude
+# in the original 5600x5600 image, then scaled by //12 to match the
+# resized image we’ll create below.
+MW_EDGE_PIX = (np.array([
+    [2800,  500], [2233,  650], [1666,  800], [1100,  950],
+    [ 833, 1443], [ 566, 1936], [ 300, 2430], [ 350, 2903],
+    [ 400, 3376], [ 450, 3850], [ 733, 4140], [1016, 4430],
+    [1300, 4720], [1550, 4846], [1800, 4973], [2050, 5100],
+    [2300, 5140], [2550, 5180], [2800, 5220], [3033, 5180],
+    [3266, 5140], [3500, 5100], [3766, 4973], [4033, 4846],
+    [4300, 4720], [4583, 4430], [4866, 4140], [5150, 3850],
+    [5200, 3376], [5250, 2903], [5300, 2430], [5026, 1936],
+    [4753, 1443], [4480,  950], [3920,  800], [3360,  650],
+], dtype=int) // 12)
+
+
 # ======================================================
 # CONFIG / CONSTANTS
 # ======================================================
@@ -1063,15 +1083,15 @@ class ATAObservationGUI:
                 )
                 self.mw_image_label.pack(fill="both", expand=True)
             else:
-                # Resize to something reasonable for the GUI
-                max_w, max_h = 800, 400
+                # Use the same scaling as the original 21cm GUI:
+                # the MW image is 5600x5600, and we downsample by 12.
                 w, h = img.size
-                scale = min(max_w / float(w), max_h / float(h), 1.0)
-                new_size = (int(w * scale), int(h * scale))
+                scale_div = 12
+                new_size = (w // scale_div, h // scale_div)
                 img_resized = img.resize(new_size, Image.LANCZOS)
 
                 self.mw_original_image = img_resized
-                self.mw_image = self.mw_original_image.copy()
+                self.mw_image = self.mw_original_image
                 self.mw_photo = ImageTk.PhotoImage(self.mw_image)
 
                 self.mw_image_label = tk.Label(image_frame, image=self.mw_photo)
@@ -1096,14 +1116,19 @@ class ATAObservationGUI:
 
     def _update_mw_map_image(self, visible_longs):
         """
-        Redraw the Milky Way image with visibility markers.
+        Redraw the Milky Way image by overlaying the wedge that marks
+        the edges of the currently visible part of the galactic plane
+        (b = 0°), using the same pixel map as the original 21cm GUI.
 
-        Parameters
-        ----------
         visible_longs : sequence of float
-            Galactic longitudes (deg) along b=0° that are currently visible.
+            Galactic longitudes (deg) currently above the altitude
+            threshold along b = 0°.
         """
         if self.mw_original_image is None:
+            return
+
+        # If Pillow isn't available, we already showed a fallback label
+        if Image is None or ImageTk is None:
             return
 
         try:
@@ -1111,45 +1136,42 @@ class ATAObservationGUI:
         except Exception:
             return
 
+        # Start from the unmodified base image
         img = self.mw_original_image.copy()
         draw = ImageDraw.Draw(img)
 
-        w, h = img.size
-        y_mid = h // 2
+        # If nothing is visible, just show the base image
+        if not visible_longs:
+            self.mw_image = img
+            self.mw_photo = ImageTk.PhotoImage(self.mw_image)
+            self.mw_image_label.configure(image=self.mw_photo)
+            self.mw_image_label.image = self.mw_photo
+            return
 
-        # Draw a faint central line for the galactic plane
-        draw.line([(0, y_mid), (w, y_mid)], fill="white", width=1)
+        # Sort longitudes and take the minimum and maximum visible l
+        l_sorted = sorted(visible_longs)
+        l_min = l_sorted[0]
+        l_max = l_sorted[-1]
 
-        # Draw small green ticks for each visible longitude
-        for l in visible_longs:
-            x = self._gal_long_to_x(l, w)
-            draw.line(
-                [(x, y_mid - 10), (x, y_mid + 10)],
-                fill="lime",
-                width=2,
-            )
+        # Convert longitudes (multiples of 10°) into indices into MW_EDGE_PIX
+        n_pts = MW_EDGE_PIX.shape[0]
 
-        # Draw red lines at the approximate edges of visibility
-        if visible_longs:
-            l_min = min(visible_longs)
-            l_max = max(visible_longs)
-            x_min = self._gal_long_to_x(l_min, w)
-            x_max = self._gal_long_to_x(l_max, w)
-            draw.line(
-                [(x_min, y_mid - 20), (x_min, y_mid + 20)],
-                fill="red",
-                width=3,
-            )
-            draw.line(
-                [(x_max, y_mid - 20), (x_max, y_mid + 20)],
-                fill="red",
-                width=3,
-            )
+        idx_min = int(round(l_min / 10.0)) % n_pts
+        idx_max = int(round(l_max / 10.0)) % n_pts
 
+        p_min = tuple(MW_EDGE_PIX[idx_min])
+        p_max = tuple(MW_EDGE_PIX[idx_max])
+
+        # Draw the two lines from the Sun position to the edge points
+        draw.line([MW_SUN_POS, p_min], fill="white", width=4)
+        draw.line([MW_SUN_POS, p_max], fill="white", width=4)
+
+        # Push updated image back into the label
         self.mw_image = img
         self.mw_photo = ImageTk.PhotoImage(self.mw_image)
         self.mw_image_label.configure(image=self.mw_photo)
         self.mw_image_label.image = self.mw_photo
+
 
     def update_mw_visibility(self):
         """
