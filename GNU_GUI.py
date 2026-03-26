@@ -87,7 +87,7 @@ SPECTRUM_FFT_SIZE = 8192        # nominal, but we'll use whatever comes in
 SPECTRUM_SAMP_RATE = 3.84e6     # Hz
 SPECTRUM_SCRIPT = os.path.join(
     os.path.dirname(__file__),
-    "GUI_Stream_21cm.py"
+    "GUI_Stream.py"
 )
 
 # Camera config
@@ -429,7 +429,6 @@ def usrp_check_levels():
         Channel 0 level -16.19 dB
         ...
         Note: channel levels should be around -16 dB in this test
-
     We deliberately do NOT enforce a zero exit code; we mimic os.popen-like
     behavior and just parse whatever stdout we get. We also invoke the command
     exactly as you do in the shell (`usrp_test.py`) via the shell so $PATH is
